@@ -66,6 +66,7 @@ typedef struct scte_simple_bitmap_s
 	uint8_t     pre_clear;
 	uint8_t     immediate;
 	uint32_t    character_color;
+	uint32_t    character_color_rgba;
 	uint32_t    frame_top_h;
 	uint32_t    frame_top_v;
 	uint32_t    frame_bottom_h;
@@ -77,18 +78,21 @@ typedef struct scte_simple_bitmap_s
 		uint32_t bottom_h;
 		uint32_t bottom_v;
 		uint32_t frame_color;
+		uint32_t frame_color_rgba;
 	} bg_style_para;
 	union{
 		struct outlined_s
 		{
 			uint8_t    outline_thickness;
 			uint32_t   outline_color;
+			uint32_t   outline_color_rgba;
 		} outlined;
 		struct drop_shadow_s
 		{
 			uint8_t    shadow_right;
 			uint8_t    shadow_bottom;
 			uint32_t   shadow_color;
+			uint32_t   shadow_color_rgba;
 		} drop_shadow;
 	} style_para;
 	uint32_t   bitmap_length;
@@ -226,21 +230,18 @@ static uint32_t am_scte_get_video_pts()
 	return strtoul(buffer, NULL, 16);
 }
 
-static void clear_bitmap(AM_SCTE27_Parser_t *parser, int left, int top, int right, int bottom)
+static void clear_bitmap(AM_SCTE27_Parser_t *parser)
 {
-	int i;
 	uint8_t* matrix;
 
 	if (!parser)
 		return;
-
 	if (!parser->para.bitmap)
 		return;
 
-	matrix = *parser->para.bitmap + top * parser->para.pitch + left * 4;
+	matrix = *parser->para.bitmap;
 
-	for (i=0; i<bottom - top; i++)
-		memset(matrix + i*parser->para.pitch, 0, (right - left)*4);
+	memset(matrix, 0, parser->para.pitch * parser->para.height);
 }
 
 static int pts_bigger_than(uint32_t pts1, uint32_t pts2)
@@ -433,70 +434,71 @@ static void generate_bitmap(AM_SCTE27_Parser_t *parser, scte_simple_bitmap_t *si
 	}
 
 	list_add_tail(&simple_bitmap->list, &parser->simple_bitmap_head);
+	parser->subtitle_count ++;
 	return;
 }
 
 static void decode_bitmap(AM_SCTE27_Parser_t *parser, scte_subtitle_t *sub_info, uint8_t* buffer, int size)
 {
-	uint32_t frame_time;
+	/*uint32_t frame_time;
 	char frame_rate_buf[256];
 	int vframe_rate = 0;
-	int frame_rate;
-	char* frame_rate_tmp;
+	int frame_rate;*/
+	uint32_t video_pts, frame_dur;
+	//char* frame_rate_tmp;
 
 	scte_simple_bitmap_t *simple_bitmap = malloc(sizeof(scte_simple_bitmap_t));
 
 	if (!buffer || !simple_bitmap)
 		return;
-
+	/*
 	AM_FileRead("/sys/class/video/frame_rate", frame_rate_buf, sizeof(frame_rate_buf));
-
 	frame_rate_tmp = strstr(frame_rate_buf, "panel");
 	if (frame_rate_tmp)
 	{
-
 		frame_rate_tmp = strstr(frame_rate_tmp, "fps");
 		scte_log("fps %s", frame_rate_tmp);
 		if (frame_rate_tmp)
 		{
-			//frame_rate_tmp = strstr(frame_rate_tmp, " ");
 			vframe_rate = strtoul(frame_rate_tmp + 4, NULL, 10);
 			scte_log("framerate %d", vframe_rate);
 		}
-	}
+	}*/
 
 	memset(simple_bitmap, 0, sizeof(scte_simple_bitmap_t));
 	//Get reveal and hide pts
 	switch (sub_info->display_std)
 	{
 		case DISPLAY_STD_720_480_30:
-			frame_rate = 30;
+			frame_dur = 3000;
 			break;
 		case DISPLAY_STD_720_576_25:
 			//frame_rate = 25; //Protocol says 25
-			frame_rate = 30;
+			frame_dur = 3600;
 			break;
 		case DISPLAY_STD_1280_720_60:
-			frame_rate = 60;
+			frame_dur = 1500;
 			break;
 		case DISPLAY_STD_1920_1080_60:
-			frame_rate = 60;
+			frame_dur = 1500;
 			break;
 		default:
-			frame_rate = 30;
-			scte_log("display standard error");
+			frame_dur = 3600;
 			break;
 	}
-	if (vframe_rate != 0 && vframe_rate > frame_rate)
-		frame_rate = vframe_rate;
-
 	simple_bitmap->pre_clear = sub_info->pre_clear;
 	simple_bitmap->immediate = sub_info->immediate;
 	simple_bitmap->show_status = DISPLAY_STATUS_INIT;
-	frame_time = PTS_PER_SEC * sub_info->duration / frame_rate;
 	simple_bitmap->reveal_pts = sub_info->pts;
-	simple_bitmap->disapear_pts = sub_info->pts + frame_time;
-#if 1
+	simple_bitmap->disapear_pts = sub_info->pts + frame_dur * sub_info->duration;
+	video_pts = am_scte_get_video_pts();
+	if (pts_bigger_than(video_pts, simple_bitmap->disapear_pts))
+	{
+		if (parser->para.report)
+			parser->para.report(parser, AM_SCTE27_Decoder_Error_TimeError);
+		scte_log("video pts larger than current data, vpts %x disappear_pts %x", video_pts, simple_bitmap->disapear_pts);
+	}
+#if 0
 	scte_log("display_std %d frame_rate %d dur %d rev_pts %x hide_pts %x",
 		sub_info->display_std,
 		frame_rate,
@@ -507,6 +509,7 @@ static void decode_bitmap(AM_SCTE27_Parser_t *parser, scte_subtitle_t *sub_info,
 	simple_bitmap->bg_style = buffer[0] & (1<<2);
 	simple_bitmap->outline_style = buffer[0] & 0x3;
 	simple_bitmap->character_color = (buffer[1] << 8) | buffer[2];
+	simple_bitmap->character_color_rgba = subtitle_color_to_bitmap_color(simple_bitmap->character_color);
 	simple_bitmap->frame_top_h = (buffer[3] << 4) | ((buffer[4] >> 4) & 0xF);
 	simple_bitmap->frame_top_v = ((buffer[4] & 0xF) << 8) | buffer[5];
 	simple_bitmap->frame_bottom_h = (buffer[6] << 4) | ((buffer[7] >> 4) & 0xF);
@@ -521,6 +524,7 @@ static void decode_bitmap(AM_SCTE27_Parser_t *parser, scte_subtitle_t *sub_info,
 		simple_bitmap->bg_style_para.bottom_h = (buffer[3] << 4) | ((buffer[4] >> 4) & 0xF);
 		simple_bitmap->bg_style_para.bottom_v = ((buffer[4] & 0xF) << 8) | buffer[5];
 		simple_bitmap->bg_style_para.frame_color = (buffer[6] << 8) | buffer[7];
+		simple_bitmap->bg_style_para.frame_color_rgba = subtitle_color_to_bitmap_color(simple_bitmap->bg_style_para.frame_color);
 
 		buffer = &buffer[8];
 	}
@@ -530,12 +534,14 @@ static void decode_bitmap(AM_SCTE27_Parser_t *parser, scte_subtitle_t *sub_info,
 		case BMP_OUTLINE_OUTLINE:
 			simple_bitmap->style_para.outlined.outline_thickness = buffer[0] & 0xF;
 			simple_bitmap->style_para.outlined.outline_color = (buffer[1] << 8) | buffer[2];
+			simple_bitmap->style_para.outlined.outline_color_rgba = subtitle_color_to_bitmap_color(simple_bitmap->style_para.outlined.outline_color);
 			buffer = &buffer[3];
 			break;
 		case BMP_OUTLINE_DROPSHADOW:
 			simple_bitmap->style_para.drop_shadow.shadow_right = (buffer[0] >> 4) & 0xF;
 			simple_bitmap->style_para.drop_shadow.shadow_bottom = buffer[0] & 0xF;
 			simple_bitmap->style_para.drop_shadow.shadow_color = (buffer[1] << 8) | buffer[2];
+			simple_bitmap->style_para.drop_shadow.shadow_color_rgba = subtitle_color_to_bitmap_color(simple_bitmap->style_para.drop_shadow.shadow_color);
 			buffer = &buffer[3];
 			break;
 		case BMP_OUTLINE_RESERVED:
@@ -546,7 +552,7 @@ static void decode_bitmap(AM_SCTE27_Parser_t *parser, scte_subtitle_t *sub_info,
 			break;
 	}
 	simple_bitmap->bitmap_length = (buffer[0] << 8) | buffer[1];
-	scte_log("size %d bmp_size %d", size, simple_bitmap->bitmap_length);
+	//scte_log("size %d bmp_size %d", size, simple_bitmap->bitmap_length);
 	generate_bitmap(parser, simple_bitmap, &buffer[2], simple_bitmap->bitmap_length);
 }
 
@@ -575,23 +581,24 @@ static void render_bitmap(AM_SCTE27_Parser_t *parser, scte_simple_bitmap_t *simp
 			{
 				case PIXEL_BG: //Bg
 					if (simple_bitmap->bg_style)
-						set_rgba(cursor + j * 4, subtitle_color_to_bitmap_color(simple_bitmap->bg_style_para.frame_color));
+						set_rgba(cursor + j * 4, simple_bitmap->bg_style_para.frame_color_rgba);
 					break;
 				case PIXEL_CH: //Font
-					set_rgba(cursor + j * 4, subtitle_color_to_bitmap_color(simple_bitmap->character_color));
+					set_rgba(cursor + j * 4, simple_bitmap->character_color_rgba);
 					break;
 				case PIXEL_OL: // Outline
-					set_rgba(cursor + j * 4, subtitle_color_to_bitmap_color(simple_bitmap->style_para.outlined.outline_color));
+					set_rgba(cursor + j * 4, simple_bitmap->style_para.outlined.outline_color_rgba);
 					break;
 				case PIXEL_DS: // Drop shadow
-					set_rgba(cursor + j * 4, subtitle_color_to_bitmap_color(simple_bitmap->style_para.drop_shadow.shadow_color));
+					set_rgba(cursor + j * 4, simple_bitmap->style_para.drop_shadow.shadow_color_rgba);
 					break;
 				default:
-					scte_log("render should not be here");
+					//scte_log("render should not be here");
 					break;
 			}
 		}
 	}
+#if 0
 	scte_log("render_bitmap: th %d tv %d bh %d bv %d bg_style %d ol_style %d bitmap_len 0x%x bgc %x chc %x",
 		simple_bitmap->frame_top_h,
 		simple_bitmap->frame_top_v,
@@ -602,11 +609,14 @@ static void render_bitmap(AM_SCTE27_Parser_t *parser, scte_simple_bitmap_t *simp
 		simple_bitmap->bitmap_length,
 		simple_bitmap->bg_style_para.frame_color,
 		simple_bitmap->character_color);
+#endif
 }
 
 static void node_check(AM_SCTE27_Parser_t *parser)
 {
-	scte_simple_bitmap_t *simple_bitmap, *tmp;
+	scte_simple_bitmap_t *simple_bitmap, *tmp, *pre_clear_bmp = NULL;
+	int has_sub = 0;
+	int need_redraw = 0;
 	uint32_t video_pts;
 
 	if (!parser)
@@ -615,60 +625,111 @@ static void node_check(AM_SCTE27_Parser_t *parser)
 	if (list_empty(&parser->simple_bitmap_head))
 		return;
 
-	//check node
+	video_pts = am_scte_get_video_pts();
 
-	parser->para.draw_begin(parser);
-
+	/* Checkj if some bitmap should be displayed.*/
 	list_for_each_entry_safe(simple_bitmap, tmp, &parser->simple_bitmap_head, list, scte_simple_bitmap_t)
 	{
-		video_pts = am_scte_get_video_pts();
+		if (pts_bigger_than(video_pts, simple_bitmap->reveal_pts)
+				&& pts_bigger_than(simple_bitmap->disapear_pts, video_pts)) {
+			has_sub = 1;
+			if (simple_bitmap->show_status == DISPLAY_STATUS_INIT)
+				need_redraw = 1;
+		}
+	}
 
-		scte_log("node_check vpts %x bmp_pts %x outdata_pts %x",video_pts,simple_bitmap->reveal_pts,simple_bitmap->disapear_pts);
+	//scte_log("has sub: %d", has_sub);
 
-		//Drop node out of date
-		if (pts_bigger_than(video_pts, simple_bitmap->disapear_pts))
+	/*Clear the old bitmap only when has somethings to be displayed*/
+	list_for_each_entry_safe(simple_bitmap, tmp, &parser->simple_bitmap_head, list, scte_simple_bitmap_t)
+	{
+		int diff = simple_bitmap->disapear_pts - video_pts;
+		int del  = 0;
+
+		if (diff < 0) {
+			if (diff > -90000 * 5)
+				del = 1;
+			else if (has_sub)
+				del = 1;
+		}
+
+		if (del)
 		{
-			clear_bitmap(parser,
-				simple_bitmap->frame_top_h,
-				simple_bitmap->frame_top_v,
-				simple_bitmap->frame_bottom_h,
-				simple_bitmap->frame_bottom_v);
-			//scte_log("drop node");
+			need_redraw = 1;
+			scte_log("remove pts %x - %x", simple_bitmap->reveal_pts, simple_bitmap->disapear_pts);
 			list_del(&simple_bitmap->list);
 			if (simple_bitmap->sub_bmp)
 				free(simple_bitmap->sub_bmp);
 			free(simple_bitmap);
+			parser->subtitle_count --;
 			continue;
 		}
 
-		//Draw node
 		if (pts_bigger_than(video_pts, simple_bitmap->reveal_pts) ||
 			simple_bitmap->immediate)
 		{
 
-			if (simple_bitmap->show_status == DISPLAY_STATUS_INIT)
-			{
-				//scte_log("node render imm: %d", simple_bitmap->immediate);
-				if (simple_bitmap->pre_clear)
-				{
-					//scte_log("pre_clear flag, clear screen");
-					clear_bitmap(parser, 0, 0, parser->para.width, parser->para.height);
-				}
-
-				render_bitmap(parser, simple_bitmap);
-				simple_bitmap->show_status = DISPLAY_STATUS_SHOW;
-			}
-			//else
-				//scte_log("node displaying");
+			if (simple_bitmap->pre_clear)
+				pre_clear_bmp = simple_bitmap;
 		}
 	}
 
-	parser->para.draw_end(parser);
+	if (pre_clear_bmp) {
+		list_for_each_entry_safe(simple_bitmap, tmp, &parser->simple_bitmap_head, list, scte_simple_bitmap_t)
+		{
+			if (simple_bitmap == pre_clear_bmp)
+				break;
+
+			scte_log("remove imm pts %x - %x", simple_bitmap->reveal_pts, simple_bitmap->disapear_pts);
+			need_redraw = 1;
+			list_del(&simple_bitmap->list);
+			if (simple_bitmap->sub_bmp)
+				free(simple_bitmap->sub_bmp);
+			free(simple_bitmap);
+			parser->subtitle_count --;
+		}
+
+	}
+
+	if (need_redraw)
+	{
+		parser->para.draw_begin(parser);
+
+		clear_bitmap(parser);
+
+		list_for_each_entry_safe(simple_bitmap, tmp, &parser->simple_bitmap_head, list, scte_simple_bitmap_t)
+		{
+			scte_log("node_check vpts %x bmp_pts %x outdata_pts %x",video_pts,simple_bitmap->reveal_pts,simple_bitmap->disapear_pts);
+
+			//Draw node
+			if (pts_bigger_than(video_pts, simple_bitmap->reveal_pts) ||
+				simple_bitmap->immediate)
+			{
+
+				if (simple_bitmap->show_status == DISPLAY_STATUS_INIT)
+				{
+					//scte_log("node render imm: %d", simple_bitmap->immediate);
+					if (parser->para.report_available) {
+						//scte_log("scte:report_available");
+						parser->para.report_available(parser);
+					}
+					simple_bitmap->show_status = DISPLAY_STATUS_SHOW;
+				}
+
+				render_bitmap(parser, simple_bitmap);
+			}
+		}
+
+		parser->para.draw_end(parser);
+		scte_log("Need redraw");
+	}
 }
 
 static void* scte27_thread(void *arg)
 {
 	AM_SCTE27_Parser_t *parser = (AM_SCTE27_Parser_t*)arg;
+
+	AM_DEBUG(0, "scte27 thread start");
 
 	pthread_mutex_lock(&parser->lock);
 
@@ -686,7 +747,7 @@ static void* scte27_thread(void *arg)
 	}
 
 	pthread_mutex_unlock(&parser->lock);
-
+	AM_DEBUG(0, "scte27 thread end");
 	return NULL;
 }
 
@@ -724,9 +785,11 @@ AM_ErrorCode_t AM_SCTE27_Destroy(AM_SCTE27_Handle_t handle)
 
 	if (!handle)
 	{
+		AM_DEBUG(0, "scte27 destroy with invalid handle");
 		return AM_SCTE27_ERR_INVALID_HANDLE;
 	}
 
+	AM_DEBUG(0, "scte27 destroy");
 	parser = (AM_SCTE27_Parser_t*)handle;
 
 	AM_SCTE27_Stop(handle);
@@ -776,9 +839,24 @@ int decode_message_body(AM_SCTE27_Parser_t *parser, const uint8_t *buf, int size
 	int video_width;
 	int video_height;
 	char read_buff[64];
+	int lang_valid = -1;
+	int i;
 
 	memcpy(sub_node.lang, buf, 3);
-	if (parser->para.lang_cb)
+	for (i=0; i<3; i++)
+	{
+		if ((sub_node.lang[i] >= 'a' && sub_node.lang[i] <= 'z') ||
+			(sub_node.lang[i] >= 'A' && sub_node.lang[i] <= 'Z'))
+		{
+			lang_valid = 0;
+		}
+		else
+		{
+			lang_valid = -1;
+			break;
+		}
+	}
+	if (parser->para.lang_cb && lang_valid == 0)
 		parser->para.lang_cb(parser, sub_node.lang, 4);
 	sub_node.pre_clear = buf[3] & (1<<7);
 	sub_node.immediate = buf[3] & (1<<6);
@@ -797,7 +875,6 @@ int decode_message_body(AM_SCTE27_Parser_t *parser, const uint8_t *buf, int size
 	}
 
 	bitmap = &buf[12];
-
 	AM_FileRead("/sys/class/video/frame_height", read_buff, sizeof(read_buff));
 	video_height = strtoul(read_buff, NULL, 10);
 	AM_FileRead("/sys/class/video/frame_width", read_buff, sizeof(read_buff));
@@ -823,19 +900,18 @@ int decode_message_body(AM_SCTE27_Parser_t *parser, const uint8_t *buf, int size
 			height = 1080;
 			break;
 		default:
-			width = 720;
-			height = 480;
+			width = video_width;
+			height = video_height;
 			scte_log("display standard error");
 			break;
 	}
 
 	//Special treatment.
-	if (video_height == 480)
+	/*if (video_height == 480)
 	{
 		width = 720;
 		height = 480;
-	}
-
+	}*/
 #if 0
 	scte_log("msg_w %d msg_h %d video width %d height %d std %d",
 	width, height, video_width, video_height, sub_node.display_std);
@@ -850,10 +926,9 @@ int decode_message_body(AM_SCTE27_Parser_t *parser, const uint8_t *buf, int size
 		sub_node.duration,
 		sub_node.block_len);
 #endif
-
 	parser->para.update_size(parser, width, height);
 	if (sub_node.sub_type == SUB_TYPE_SIMPLE_BITMAP)
-			decode_bitmap(parser, &sub_node, bitmap, sub_node.block_len);
+		decode_bitmap(parser, &sub_node, bitmap, sub_node.block_len);
 
 	return 0;
 }
@@ -867,6 +942,7 @@ AM_ErrorCode_t AM_SCTE27_Decode(AM_SCTE27_Handle_t handle, const uint8_t *buf, i
 	int segment_size;
 	int seg_errno;
 	int ret = 0;
+	enum AM_SCTE27_Decoder_Error error_flag = AM_SCTE27_Decoder_Error_END;
 
 	if(!handle)
 	{
@@ -900,15 +976,18 @@ AM_ErrorCode_t AM_SCTE27_Decode(AM_SCTE27_Handle_t handle, const uint8_t *buf, i
 		if (curr_no > last_no)
 		{
 			seg_errno = AM_SCTE27_PACKET_INVALID;
+			error_flag = AM_SCTE27_Decoder_Error_LoseData;
 			goto SEG_ERROR;
 		}
 
 		if (curr_no == 0)
 		{
+			scte_log("scte overlay");
 			clean_parser_segment(parser);
 			parser->scte_segment.seg_size = 0;
 			parser->scte_segment.table_ext = table_ext;
 			parser->scte_segment.last_no = last_no;
+			parser->scte_segment.curr_no = -1;
 		}
 
 		if (table_ext != parser->scte_segment.table_ext &&
@@ -917,6 +996,7 @@ AM_ErrorCode_t AM_SCTE27_Decode(AM_SCTE27_Handle_t handle, const uint8_t *buf, i
 			clean_parser_segment(parser);
 			scte_log("segment ext does not match");
 			seg_errno = AM_SCTE27_PACKET_INVALID;
+			error_flag = AM_SCTE27_Decoder_Error_InvalidData;
 			goto SEG_ERROR;
 		}
 
@@ -926,9 +1006,11 @@ AM_ErrorCode_t AM_SCTE27_Decode(AM_SCTE27_Handle_t handle, const uint8_t *buf, i
 			clean_parser_segment(parser);
 			scte_log("segment curr_no does not match");
 			seg_errno = AM_SCTE27_PACKET_INVALID;
+			error_flag = AM_SCTE27_Decoder_Error_LoseData;
 			goto SEG_ERROR;
 		}
 
+		parser->scte_segment.curr_no = curr_no;
 		parser->scte_segment.has_segment = 1;
 		segment_size = section_length - 1 - 5 - 4;
 		parser->scte_segment.segment_container = realloc(parser->scte_segment.segment_container, parser->scte_segment.seg_size + segment_size);
@@ -942,6 +1024,7 @@ AM_ErrorCode_t AM_SCTE27_Decode(AM_SCTE27_Handle_t handle, const uint8_t *buf, i
 			if (parser->scte_segment.seg_size < 12)
 			{
 				seg_errno = AM_SCTE27_PACKET_INVALID;
+				error_flag = AM_SCTE27_Decoder_Error_InvalidData;
 				goto SEG_ERROR;
 			}
 
@@ -967,7 +1050,8 @@ AM_ErrorCode_t AM_SCTE27_Decode(AM_SCTE27_Handle_t handle, const uint8_t *buf, i
 
 	return AM_SUCCESS;
 SEG_ERROR:
-
+	if (parser->para.report)
+		parser->para.report(parser, error_flag);
 	pthread_mutex_unlock(&parser->lock);
 	return seg_errno;
 }
@@ -1019,6 +1103,7 @@ AM_ErrorCode_t AM_SCTE27_Stop(AM_SCTE27_Handle_t handle)
 
 	if(parser->running)
 	{
+		AM_DEBUG(0, "scte27 stop thread");
 		parser->running = AM_FALSE;
 		pthread_cond_signal(&parser->cond);
 		th = parser->thread;
@@ -1027,7 +1112,7 @@ AM_ErrorCode_t AM_SCTE27_Stop(AM_SCTE27_Handle_t handle)
 
 	pthread_mutex_unlock(&parser->lock);
 	pthread_cond_broadcast(&parser->cond);
-	pthread_kill(parser->thread, SIGALRM);
+	//pthread_kill(parser->thread, SIGALRM);
 	pthread_join(parser->thread, NULL);
 
 	return AM_SUCCESS;
