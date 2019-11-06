@@ -323,6 +323,7 @@ static AM_ErrorCode_t dvb_set_source(AM_DMX_Device_t *dev, AM_DMX_Source_t src)
 		break;
 #if defined(CHIP_8226M) || defined(CHIP_8626X)
 		case AM_DMX_SRC_TS2:
+		AM_DEBUG(1, "8266 support demux source %d", src);
 			cmd = "ts2";
 		break;
 #endif

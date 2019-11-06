@@ -613,8 +613,10 @@ static void dvb_play(int vpid, int apid, int ppid, int vfmt, int afmt, int freq,
 	{
 		AM_FEND_Close(FEND_DEV_NO);
 	}
-	
+	AM_AV_StopTS(AV_DEV_NO);
+	sleep(1);
 	AM_DMX_Close(dmx);
+	sleep(1);
 }
 
 static void ves_play(const char *name, int vfmt)
