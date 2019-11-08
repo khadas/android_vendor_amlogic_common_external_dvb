@@ -4428,6 +4428,9 @@ static int aml_close_ts_mode(AM_AV_Device_t *dev, AM_Bool_t destroy_thread)
 	AV_TSData_t *ts;
 	int fd;
 
+	AV_TSPlayPara_t	*tp	= &dev->ts_player.play_para;
+	AM_Bool_t has_audio = VALID_AUDIO(tp->apid, tp->afmt);
+
 	if (dev->afd_enable)
 		aml_stop_afd(dev);
 
@@ -4441,9 +4444,11 @@ static int aml_close_ts_mode(AM_AV_Device_t *dev, AM_Bool_t destroy_thread)
 		close(ts->vid_fd);
 
 	aml_set_tsync_enable(0);
-	aml_set_ad_source(&ts->ad, 0, 0, 0, ts->adec);
-	audio_ops->adec_set_decode_ad(0, 0, 0, ts->adec);
-	audio_ops->adec_stop_decode(&ts->adec);
+	if (has_audio) {
+		aml_set_ad_source(&ts->ad, 0, 0, 0, ts->adec);
+		audio_ops->adec_set_decode_ad(0, 0, 0, ts->adec);
+		audio_ops->adec_stop_decode(&ts->adec);
+	}
 
 	free(ts);
 
@@ -4610,7 +4615,7 @@ static void* aml_av_monitor_thread(void *arg)
 		} else {
 			//AM_DEBUG(1,"Audio:%d or Video:%d is Running.",has_audio,has_video);
 			}
-		if (is_dts_dolby == 1) {
+		if (has_audio && is_dts_dolby == 1) {
 			if (mChange_audio_flag == -1) {
 				mChange_audio_flag = aml_get_audio_digital_raw();
 			} else if (mChange_audio_flag != aml_get_audio_digital_raw()) {
@@ -4619,7 +4624,7 @@ static void* aml_av_monitor_thread(void *arg)
 			}
 		}
 		//switch audio pid or fmt
-		if (dev->audio_switch == AM_TRUE)
+		if (has_audio && dev->audio_switch == AM_TRUE)
 		{
 			aml_switch_ts_audio_fmt(dev, ts, tp);
 			dev->audio_switch = AM_FALSE;
@@ -5034,7 +5039,7 @@ static void* aml_av_monitor_thread(void *arg)
 #endif /*!defined ENABLE_PCR*/
 
 #ifdef USE_ADEC_IN_DVB
-            if (s_audio_cb == NULL) {
+            if (has_audio && s_audio_cb == NULL) {
 		        int status = audio_decoder_get_enable_status(ts->adec);
 				if (status == 1) {
 					AM_EVT_Signal(dev->dev_no, AM_AV_EVT_AUDIO_AC3_LICENCE_RESUME, NULL);
