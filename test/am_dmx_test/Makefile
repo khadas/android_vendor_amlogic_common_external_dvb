@@ -20,7 +20,7 @@ SRC_FILES = am_dmx_test.c
 CFLAGS   := -c -Wall -Wno-unknown-pragmas -Wno-format -O3 -fexceptions -fnon-call-exceptions
 
 CFLAGS += $(LOCAL_C_INCLUDES) $(DEFINES)
-LDFLAGS  := -L$(TARGET_DIR)/lib -L$(TARGET_DIR)/usr/lib -lam_adp -lamadec -lamavutils -lzf_log -lcutils -ltinyalsa -laudio_client -lamaudioutils -lLogging  -lInterProcess -lBase -lboost_system -lboost_filesystem -lexpat -lpthread 
+LDFLAGS  := -L$(TARGET_DIR)/usr/lib -lam_adp -lamavutils
 
 all : $(OBJS) $(OUTPUT)
 
