@@ -63,9 +63,18 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include/am_adp\
 		   $(LOCAL_PATH)/am_closecaption/am_vbi\
 		   $(LOCAL_PATH)/../android/ndk/include\
 		   $(LOCAL_PATH)/../android/ndk/include/linux/ \
-		   $(LOCAL_PATH)/../../libzvbi/src\
 		   external/sqlite/dist\
 		   $(LOCAL_PATH)/../am_adp/am_open_lib/am_ci
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+     ifeq (,$(wildcard $(LOCAL_PATH)/../../../../external/libzvbi))
+          LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/libzvbi/include
+     else
+          LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../libzvbi/src
+     endif
+else
+     LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../libzvbi/src
+endif
 
 ifeq ($(strip $(BOARD_TV_USE_NEW_TVIN_PARAM)),true)
 LOCAL_CFLAGS += -DCC_TV_USE_NEW_TVIN_PARAM=1
@@ -77,7 +86,11 @@ ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
     LOCAL_SHARED_LIBRARIES+= libzvbi libsqlite libam_adp $(AMADEC_LIBS) liblog libdl libc libcutils
 else
     LOCAL_CFLAGS += -DUSE_VENDOR_ICU
-    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+          LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/icu/include
+    else
+	  LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+    endif
     LOCAL_STATIC_LIBRARIES+= libsqlite
     LOCAL_SHARED_LIBRARIES+= libzvbi libam_adp $(AMADEC_LIBS) liblog libdl libc libcutils
 endif
@@ -151,10 +164,19 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include/am_adp\
 		    $(LOCAL_PATH)/am_scan/libsigdetect\
 		    $(LOCAL_PATH)/../android/ndk/include\
 		    $(LOCAL_PATH)/../android/ndk/include/linux/ \
-		    $(LOCAL_PATH)/../../libzvbi/src\
 		    external/sqlite/dist\
 		    $(LOCAL_PATH)/am_closecaption/am_vbi\
 		    $(LOCAL_PATH)/../am_adp/am_open_lib/am_ci
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+     ifeq (,$(wildcard $(LOCAL_PATH)/../../../../external/libzvbi))
+          LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/libzvbi/include
+     else
+          LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../libzvbi/src
+     endif
+else
+     LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../libzvbi/src
+endif
 
 ifeq ($(BOARD_VNDK_VERSION), current)
 ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
@@ -162,8 +184,14 @@ ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
     LOCAL_SHARED_LIBRARIES+= libzvbi libsqlite libam_adp liblog libdl libc libcutils libicui18n liblog libdl libc libcutils
 else
     LOCAL_CFLAGS += -DUSE_VENDOR_ICU
-    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
-    LOCAL_STATIC_LIBRARIES+= libsqlite libicuuc libam_adp libzvbi
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+          LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/icu/include
+	  LOCAL_STATIC_LIBRARIES += libicuuc_product
+    else
+	  LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+	  LOCAL_STATIC_LIBRARIES += libicuuc
+    endif
+    LOCAL_STATIC_LIBRARIES+= libsqlite libam_adp libzvbi
     LOCAL_SHARED_LIBRARIES+= liblog libdl libc libcutils
 endif
 else

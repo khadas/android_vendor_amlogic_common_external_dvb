@@ -30,8 +30,11 @@ LOCAL_CFLAGS+=-DANDROID -DAMLINUX -DCHIP_8226M -DLINUX_DVB_FEND
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../include/am_adp $(LOCAL_PATH)/../../android/ndk/include \
 			$(AMADEC_C_INCLUDES)\
 			common/include/linux/amlogic
-
-LOCAL_SHARED_LIBRARIES += libam_adp_adec
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 29&& echo OK),OK)
+     LOCAL_STATIC_LIBRARIES += libam_adp
+else
+     LOCAL_SHARED_LIBRARIES += libam_adp_adec
+endif
 LOCAL_SHARED_LIBRARIES += $(AMADEC_LIBS) libcutils liblog libc
 
 include $(BUILD_EXECUTABLE)

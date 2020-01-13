@@ -167,7 +167,11 @@ ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
     LOCAL_SHARED_LIBRARIES+=$(AMADEC_LIBS) libicuuc libcutils liblog libdl libc
 else
     LOCAL_CFLAGS += -DUSE_VENDOR_ICU
-    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+	LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/icu/include
+    else
+	LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+    endif
     LOCAL_SHARED_LIBRARIES+=$(AMADEC_LIBS) libicuuc_vendor libcutils liblog libdl libc
 endif
 else
@@ -336,9 +340,12 @@ ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28&& echo OK),OK)
         LOCAL_STATIC_LIBRARIES+= libicuuc_product libicui18n_product
     else
         LOCAL_CFLAGS += -DUSE_VENDOR_ICU
-        LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
-        LOCAL_SHARED_LIBRARIES+= libcutils liblog libdl libc
-        LOCAL_STATIC_LIBRARIES+= libicuuc_product libicui18n_product
+        ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+	    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/icu/include
+        else
+	    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+        endif
+        LOCAL_SHARED_LIBRARIES+= libicuuc libcutils liblog libdl libc
     endif
 else
 LOCAL_C_INCLUDES += external/icu/icu4c/source/common
@@ -352,6 +359,8 @@ LOCAL_PRELINK_MODULE := false
 include $(BUILD_STATIC_LIBRARY)
 
 ###################################################################################################################
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+else
 include $(CLEAR_VARS)
 
 AMADEC_C_INCLUDES:=hardware/amlogic/media/amcodec/include\
@@ -506,7 +515,7 @@ LOCAL_PRELINK_MODULE := false
 #LOCAL_32_BIT_ONLY := true
 
 include $(BUILD_SHARED_LIBRARY)
-
+endif
 #########################################################################################################
 ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
 include $(CLEAR_VARS)
@@ -650,7 +659,11 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include/am_adp\
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28&& echo OK),OK)
 LOCAL_CFLAGS += -DUSE_VENDOR_ICU
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+     ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
+	    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/icu/include
+     else
+	    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../icu/icu4c/source/common
+     endif
 LOCAL_SHARED_LIBRARIES+=$(AMADEC_LIBS) libicuuc_vendor libcutils liblog libdl libc
 else
 LOCAL_C_INCLUDES += external/icu/icu4c/source/common
