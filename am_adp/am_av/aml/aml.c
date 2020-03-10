@@ -7027,7 +7027,7 @@ static AM_ErrorCode_t aml_get_vstatus(AM_AV_Device_t *dev, AM_AV_VideoStatus_t *
 	para->frames    = 1;
 	para->interlaced  = 1;
 
-#if 1
+#if 0
 	if (AM_FileRead(VID_FRAME_FMT_FILE, buf, sizeof(buf)) >= 0) {
 		char *ptr = strstr(buf, "interlace");
 		if (ptr) {
@@ -7036,7 +7036,6 @@ static AM_ErrorCode_t aml_get_vstatus(AM_AV_Device_t *dev, AM_AV_VideoStatus_t *
 			para->interlaced = 0;
 		}
 	}
-#else
 	if(AM_FileRead("/sys/module/amvdec_mpeg12/parameters/pic_type", buf, sizeof(buf))>=0){
 		int i = strtol(buf, NULL, 0);
 		if(i==1)
