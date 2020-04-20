@@ -3614,7 +3614,7 @@ static void *aml_timeshift_thread(void *arg)
 		{
 			if (has_video) {
 				if (AM_FileRead(VIDEO_DMX_PTS_FILE, pts_buf, sizeof(pts_buf)) >= 0) {
-					sscanf(pts_buf, "%d", &dmx_vpts);
+					sscanf(pts_buf, "%u", &dmx_vpts);
 				} else {
 					AM_DEBUG(1, "cannot read \"%s\"", VIDEO_DMX_PTS_FILE);
 					dmx_vpts = 0;
@@ -3629,7 +3629,7 @@ static void *aml_timeshift_thread(void *arg)
 
 			if (has_audio) {
 				if (AM_FileRead(AUDIO_DMX_PTS_FILE, pts_buf, sizeof(pts_buf)) >= 0) {
-					sscanf(pts_buf, "%d", &dmx_apts);
+					sscanf(pts_buf, "%u", &dmx_apts);
 				} else {
 					AM_DEBUG(1, "cannot read \"%s\"", AUDIO_DMX_PTS_FILE);
 					dmx_apts = 0;
@@ -5392,14 +5392,14 @@ static void* aml_av_monitor_thread(void *arg)
 		}
 
 		if (AM_FileRead(AUDIO_DMX_PTS_FILE, buf, sizeof(buf)) >= 0) {
-			sscanf(buf, "%d", &dmx_apts);
+			sscanf(buf, "%u", &dmx_apts);
 		} else {
 			AM_DEBUG(1, "[avmon] cannot read \"%s\"", AUDIO_DMX_PTS_FILE);
 			dmx_apts = 0;
 		}
 
 		if (AM_FileRead(VIDEO_DMX_PTS_FILE, buf, sizeof(buf)) >= 0) {
-			sscanf(buf, "%d", &dmx_vpts);
+			sscanf(buf, "%u", &dmx_vpts);
 		} else {
 			AM_DEBUG(1, "[avmon] cannot read \"%s\"", VIDEO_DMX_PTS_FILE);
 			dmx_vpts = 0;
