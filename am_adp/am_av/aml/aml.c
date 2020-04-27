@@ -2769,6 +2769,10 @@ static AM_ErrorCode_t aml_start_timeshift(AV_TimeshiftData_t *tshift, AV_TimeShi
 			AM_DEBUG(1, "set video PID failed");
 			return AM_AV_ERR_SYS;
 		}
+		if (dev->afd_enable) {
+			AM_DEBUG(1, "start afd...");
+			aml_start_afd(dev, tp->vfmt);
+		}
 	}
 
 	/*if ((tp->vfmt == VFORMAT_H264) || (tp->vfmt == VFORMAT_VC1))*/
@@ -2990,8 +2994,11 @@ static void aml_check_audio_state(void)
 static void aml_stop_timeshift(AV_TimeshiftData_t *tshift, AM_Bool_t destroy_thread)
 {
 	char buf[64];
-
 	AM_Bool_t has_audio = VALID_AUDIO(tshift->tp.apid, tshift->tp.afmt);
+
+	if (tshift->dev->afd_enable)
+		aml_stop_afd(tshift->dev);
+
 	if (tshift->running && destroy_thread)
 	{
 		tshift->running = 0;
