@@ -16,6 +16,7 @@
 #define _AM_TYPES_H
 
 #include <stdint.h>
+#include <sys/types.h>
 #include "pthread.h"
 
 #ifdef __cplusplus
