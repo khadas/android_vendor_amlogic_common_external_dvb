@@ -73,6 +73,9 @@
 #ifdef USE_ADEC_IN_DVB
 #include <adec-external-ctrl.h>
 #endif
+#ifdef RESOURCE_MANAGER
+#include <resourcemanage.h>
+#endif
 void *adec_handle = NULL;
 
 #ifndef TRICKMODE_NONE
@@ -4562,6 +4565,9 @@ static AM_ErrorCode_t aml_open(AM_AV_Device_t *dev, const AM_AV_OpenPara_t *para
 	}
 #endif
 #endif
+#ifdef RESOURCE_MANAGER
+    dev->res_fd = -1;
+#endif
 //#endif
 
 #if !defined(ADEC_API_NEW)
@@ -6115,7 +6121,17 @@ static AM_ErrorCode_t aml_open_mode(AM_AV_Device_t *dev, AV_PlayMode_t mode)
 	int fd;
 
 	AM_DebugSetLogLevel(_get_dvb_loglevel());
-
+#ifdef RESOURCE_MANAGER
+    dev->res_fd = resman_init("AmTsDVB", TYPE_DVB);
+    AM_DEBUG(1, "AmTsDVB resman_init res_fd:%d\n", dev->res_fd);
+    if (!resman_acquire_wait(dev->res_fd, VFM_DEFAULT, 2000) ||
+        !resman_acquire_wait(dev->res_fd, AMVIDEO, 2000) ||
+        !resman_acquire_wait(dev->res_fd, TSPARSER, 2000))
+    {
+        AM_DEBUG(1, "AmTsDVB ctor TSPARSER busy\n");
+        return AM_AV_ERR_BUSY;
+    }
+#endif
 	switch (mode)
 	{
 		case AV_PLAY_VIDEO_ES:
@@ -6415,6 +6431,14 @@ static AM_ErrorCode_t aml_close_mode(AM_AV_Device_t *dev, AV_PlayMode_t mode)
 		default:
 		break;
 	}
+#ifdef RESOURCE_MANAGER
+    if (dev->res_fd >= 0)
+    {
+        resman_close(dev->res_fd);
+		AM_DEBUG(1, "resman_close, res_fd:%d", dev->res_fd);
+        dev->res_fd = -1;
+    }
+#endif
 
 	return AM_SUCCESS;
 }

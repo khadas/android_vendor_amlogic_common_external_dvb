@@ -32,11 +32,11 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../include/am_adp $(LOCAL_PATH)/../../andro
 			common/include/linux/amlogic
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 29&& echo OK),OK)
      LOCAL_STATIC_LIBRARIES += libam_adp
+     LOCAL_SHARED_LIBRARIES += libmediahal_resman.system liblog
 else
      LOCAL_SHARED_LIBRARIES += libam_adp_adec
 endif
 LOCAL_SHARED_LIBRARIES += $(AMADEC_LIBS) libcutils liblog libc
-
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -84,10 +84,11 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../include/am_adp $(LOCAL_PATH)/../../andro
 			frameworks/av/include
 
 LOCAL_LDLIBS := -llog
-
 LOCAL_STATIC_LIBRARIES := libam_adp libcutils libutils
 LOCAL_SHARED_LIBRARIES := libaudioclient
-
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28&& echo OK),OK)
+     LOCAL_SHARED_LIBRARIES += libmediahal_resman.system liblog
+endif
 LOCAL_CFLAGS := -Wall
 
 include $(BUILD_EXECUTABLE)

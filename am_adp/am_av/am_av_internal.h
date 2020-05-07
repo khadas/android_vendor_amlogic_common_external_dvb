@@ -296,6 +296,9 @@ struct AM_AV_Device
 	/*for audio switching*/
 	uint16_t                     alt_apid;
 	AM_AV_AFormat_t              alt_afmt;
+#ifdef RESOURCE_MANAGER
+	int              res_fd;         /**<Resource Manage ID*/
+#endif
 };
 
 /****************************************************************************
