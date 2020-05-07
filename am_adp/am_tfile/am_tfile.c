@@ -1192,7 +1192,7 @@ int AM_TFile_Seek(AM_TFile_t tfile, loff_t offset)
 
 loff_t AM_TFile_Tell(AM_TFile_t tfile)
 {
-	int ret = 0;
+	loff_t ret = 0;
 	if (! tfile->opened)
 	{
 		AM_DEBUG(0, "[tfile] has not opened");
