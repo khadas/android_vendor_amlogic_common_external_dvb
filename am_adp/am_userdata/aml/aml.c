@@ -206,6 +206,14 @@ const AM_USERDATA_Driver_t aml_ud_drv = {
 .get_mode = aml_get_mode,
 };
 
+uint32_t am_get_video_pts()
+{
+#define VIDEO_PTS_PATH "/sys/class/tsync/pts_video"
+	char buffer[16] = {0};
+	AM_FileRead(VIDEO_PTS_PATH,buffer,16);
+	return strtoul(buffer, NULL, 16);
+}
+
 static void dump_cc_data(char *who, int poc, uint8_t *buff, int size)
 {
 	int i;
@@ -430,8 +438,12 @@ static void aml_add_cc_data(AM_USERDATA_Device_t *dev, int poc, int type, uint8_
 			pcc = &ud->cc_list;
 			break;
 		}*/
-
-		if (cc->poc > poc) {
+		if (cc->pts == pts)
+		{
+			if (cc->poc > poc)
+				break;
+		}
+		else if (cc->pts > pts) {
 			break;
 		}
 
@@ -719,14 +731,14 @@ static void aml_h264_userdata_package(AM_USERDATA_Device_t *dev, int poc, int ty
 	AM_UDDrvData *ud = dev->drv_data;
 	AM_CCData *cc;
 
-	if (poc == 0)
-		aml_flush_cc_data(dev);
+	//if (poc == 0)
+		//aml_flush_cc_data(dev);
 
 	aml_add_cc_data(dev, poc, I_TYPE, p, len, pts, pts_valid, duration);
 
 	cc = ud->cc_list;
 	while (cc) {
-		if ((ud->curr_poc + 1 == cc->poc) || (ud->curr_poc + 2 == cc->poc))
+		if (am_get_video_pts() > cc->pts)
 		{
 			aml_write_userdata(dev, cc->buf, cc->size, cc->pts, cc->pts_valid, cc->duration);
 
