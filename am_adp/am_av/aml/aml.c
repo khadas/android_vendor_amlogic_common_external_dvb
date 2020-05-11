@@ -5217,7 +5217,7 @@ static void* aml_av_monitor_thread(void *arg)
 			}
 		}
 		//switch audio pid or fmt
-		if (dev->audio_switch == AM_TRUE)
+		if (dev->audio_switch == AM_TRUE || (tp->apid != dev->alt_apid || tp->afmt != dev->alt_afmt))
 		{
 			aml_switch_ts_audio_fmt(dev, ts, tp);
 			dev->audio_switch = AM_FALSE;
