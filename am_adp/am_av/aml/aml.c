@@ -3110,7 +3110,7 @@ static int am_timeshift_fffb(AV_TimeshiftData_t *tshift, AV_PlayCmdPara_t *cmd)
 		if (tshift->para.para.mode == AM_AV_TIMESHIFT_MODE_TIMESHIFTING) {
 			next_time = tshift->fffb_current + speed * FFFB_JUMP_STEP;
 			AM_TFile_TimeSeek(tshift->file, next_time);
-			AM_DEBUG(2, "[timeshift] fffb cur[%d] -> next[%d]", tshift->fffb_current, next_time);
+			AM_DEBUG(1, "[timeshift] fffb cur[%d] -> next[%d]", tshift->fffb_current, next_time);
 		} else {
 			loff_t offset;
 			next_time = tshift->fffb_current + speed * FFFB_JUMP_STEP;
@@ -3124,7 +3124,7 @@ static int am_timeshift_fffb(AV_TimeshiftData_t *tshift, AV_PlayCmdPara_t *cmd)
 			}
 #endif
 			AM_TFile_Seek(tshift->file, offset);
-			AM_DEBUG(2, "[timeshift] fffb cur[%d] -> next[%d],offset[%lld]", tshift->fffb_current, next_time, offset);
+			AM_DEBUG(1, "[timeshift] fffb cur[%d] -> next[%d],offset[%lld]", tshift->fffb_current, next_time, offset);
 			tshift->eof = (next_time == tshift->duration) ? 1 : 0;
 			if (tshift->eof) {
 				AM_DEBUG(1, "[timeshift] fffb eof");
@@ -3728,13 +3728,13 @@ static void *aml_timeshift_thread(void *arg)
                         }
 			do {
 #endif
-				ret = aml_timeshift_fetch_data(tshift, buf+tshift->left, len - tshift->left, 100);
+				ret = aml_timeshift_fetch_data(tshift, buf+tshift->left, len, 100);
 				if (ret > 0)
 				{
 					tshift->left += ret;
 					fetch_fail = 0;
 				}
-				else if (len - tshift->left != 0)
+				else if (len != 0)
 				{
 					int error = errno;
 					//AM_DEBUG(4, "read playback file failed: %s", strerror(errno));
@@ -3754,7 +3754,7 @@ static void *aml_timeshift_thread(void *arg)
 				}
 #ifdef SUPPORT_CAS
 			} 
-while (secure_enable && (tshift->left < len) && tshift->running);
+while (secure_enable && (tshift->left < SECURE_BLOCK_SIZE) && tshift->running);
 #endif
 		}
 
