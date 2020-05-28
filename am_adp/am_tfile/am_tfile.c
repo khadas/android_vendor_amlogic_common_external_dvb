@@ -1259,8 +1259,8 @@ int AM_TFile_TimeSeek(AM_TFile_t tfile, int offset_ms/*offset from time start*/)
 		tfile->read = from;
 
 		aml_timeshift_subfile_seek(tfile, tfile->read, AM_TRUE);
-
-		tfile->avail = (tfile->write >= pstart->start) ? tfile->write - pstart->start : (tfile->size - pstart->start) + tfile->write;
+        tfile->avail = (tfile->write >= from) ? tfile->write - from : (tfile->size - from) + tfile->write;
+		//tfile->avail = (tfile->write >= pstart->start) ? tfile->write - pstart->start : (tfile->size - pstart->start) + tfile->write;
 		if (tfile->avail > 0)
 			pthread_cond_signal(&tfile->cond);
 
