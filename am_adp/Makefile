@@ -43,7 +43,7 @@ SRC_FILES = $(wildcard am_dmx/*.c am_dmx/linux_dvb/*.c \
 		    am_open_lib/am_freesat/freesat.c \
 		    am_tfile/am_tfile.c)
 
-CFLAGS   := -c -Wall -shared -fPIC -Wno-unknown-pragmas -Wno-format -O3 -fexceptions -fnon-call-exceptions -DUSE_ADEC_IN_DVB
+CFLAGS   := -c -Wall -shared -fPIC -Wno-unknown-pragmas -Wno-format -O3 -fexceptions -fnon-call-exceptions -DUSE_ADEC_IN_DVB -DCHIP_8226M
 
 CFLAGS += $(LOCAL_C_INCLUDES) $(DEFINES)
 LDFLAGS  := -shared -fPIC -L$(TARGET_DIR)/usr/lib -lamadec
@@ -60,6 +60,7 @@ install:
 	-install -m 555 ${OUTPUT} $(TARGET_DIR)/usr/lib/
 	-mkdir -p $(STAGING_DIR)/usr/include/aml_dvb
 	-cp -ar $(LOCAL_PATH)/../include/am_adp $(STAGING_DIR)/usr/include/aml_dvb
+	-cp -ar $(LOCAL_PATH)/../android/ndk/include/linux/dvb/*.h $(STAGING_DIR)/usr/include/linux/dvb/
 
 clean:
 	@rm -f $(OBJS)
