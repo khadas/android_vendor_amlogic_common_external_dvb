@@ -277,6 +277,7 @@ void *adec_handle = NULL;
 #endif
 #define SHOW_FIRSTFRAME_NOSYNC_PROP "tv.dtv.showfirstframe_nosync"
 #define REPLAY_ENABLE_PROP	"tv.dtv.replay_enable"
+#define HEART_BEAT_INTERVAL_PROP "tv.dtv.heart_beat_time"
 
 #define CANVAS_ALIGN(x)    (((x)+7)&~7)
 #define JPEG_WRTIE_UNIT    (32*1024)
@@ -5092,6 +5093,52 @@ convert_aspect_ratio(enum E_ASPECT_RATIO euAspectRatio)
 	return AM_AV_VIDEO_ASPECT_AUTO;
 }
 
+static void get_sysfs_node(char* path, char* value)
+{
+	int fd;
+	if ( path == NULL || strlen(path) <= 10 || !value)
+	{
+		return;
+	}
+	fd = open(path, O_RDONLY);
+	if (fd >= 0) {
+		int ret = read(fd, value, 4096);
+		if (ret < 0) {
+			AM_DEBUG(1,"read %s failed\n", path);
+			close(fd);
+			return;
+		}
+		close(fd);
+	} else {
+		sprintf(value, "%s", "fail");
+	};
+
+	return;
+}
+
+static void aml_av_heart_beat_status()
+{
+	char node_state[][128] = {
+		"/sys/class/vfm/map",
+		"/sys/class/amstream/bufs",
+		"/sys/class/ppmgr/ppmgr_vframe_states",
+		"/sys/class/video/vframe_states",
+		"/sys/class/tsync/mode",
+		"/sys/class/tsync/enable",
+		"/sys/class/tsync/pts_audio",
+		"/sys/class/tsync/pts_video",
+		"/sys/class/tsync/pts_pcrscr"
+	};
+
+	char value[4096]={0};
+
+	for (int i = 0; i < sizeof(node_state)/sizeof(*node_state); i++) {
+		memset(value, 0, sizeof(value));
+		get_sysfs_node(node_state[i], value);
+		AM_DEBUG(1, "[%s]%s \n %s\n", __FUNCTION__, node_state[i], value);
+	}
+}
+
 int am_av_restart_pts_repeat_count = 2;
 
 /**\brief AV buffer 监控线程*/
@@ -5114,6 +5161,8 @@ static void* aml_av_monitor_thread(void *arg)
 	int resample_type = 0;
 	int next_resample_type = resample_type;
 	int now, next_resample_start_time = 0;
+	int last_time = 0;
+	int heart_beat_time = 5000;
 	int abuf_level = 0, vbuf_level = 0;
 	int abuf_size = 0, vbuf_size = 0;
 	unsigned int abuf_read_ptr = 0, vbuf_read_ptr = 0;
@@ -5151,6 +5200,9 @@ static void* aml_av_monitor_thread(void *arg)
 	AV_InjectData_t *inj;
 	unsigned int cur_time = 0;
 	unsigned int last_replay_time = 0;
+#ifdef ANDROID
+	heart_beat_time = property_get_int32(HEART_BEAT_INTERVAL_PROP, 10000);
+#endif
 #define REPLAY_TIME_INTERVAL   1000
 
 	int replay_done = 0;
@@ -5198,7 +5250,7 @@ static void* aml_av_monitor_thread(void *arg)
 		tp->afmt == AFORMAT_EAC3) {
 		is_dts_dolby = 1;
 	}
-
+	AM_TIME_GetClock(&last_time);
 	while (mon->av_thread_running) {
 
 		if (!adec_start || (has_video && no_video))
@@ -5240,6 +5292,11 @@ static void* aml_av_monitor_thread(void *arg)
 		}
 
 		AM_TIME_GetClock(&now);
+		if (now - last_time > heart_beat_time) {
+			aml_av_heart_beat_status();
+			last_time = now;
+		}
+
 		if (has_audio && (ioctl(ts->fd, AMSTREAM_IOC_AB_STATUS, (unsigned long)&astatus) != -1)) {
 			abuf_size  = astatus.status.size;
 			abuf_level = astatus.status.data_len;
