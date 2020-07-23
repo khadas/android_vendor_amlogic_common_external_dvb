@@ -850,10 +850,11 @@ static void* aml_userdata_thread (void *arg)
 	int left = 0;
 	int flush = 1;
 	int vdec_ids;
+	int read_vdec_id;
 	struct userdata_param_t user_para_info;
 
 	pfd.events = POLLIN|POLLERR;
-	pfd.fd	 = fd;
+	pfd.fd = fd;
 
 	while (ud->running) {
 		//If scte and mpeg both exist, we need to ignore scte cc data,
@@ -871,17 +872,18 @@ static void* aml_userdata_thread (void *arg)
 
 		//For multi-instances support
 		vdec_ids = 0;
+
 		if (-1 == ioctl(fd, AMSTREAM_IOC_UD_AVAIBLE_VDEC, &vdec_ids)) {
 			AM_DEBUG(AM_DEBUG_LEVEL, "get avaible vdec failed");
+			continue;
 		} else {
 			AM_DEBUG(AM_DEBUG_LEVEL, "get avaible vdec OK: 0x%x\n", vdec_ids);
 		}
 
-		if (!(vdec_ids & 1))
-			continue;
+		read_vdec_id = ffs(vdec_ids) - 1;
 
 		if (flush) {
-			ioctl(fd, AMSTREAM_IOC_UD_FLUSH_USERDATA, NULL);
+			ioctl(fd, AMSTREAM_IOC_UD_FLUSH_USERDATA, &read_vdec_id);
 			flush = 0;
 			continue;
 		}
@@ -891,13 +893,14 @@ static void* aml_userdata_thread (void *arg)
 				break;
 
 			memset(&user_para_info, 0, sizeof(struct userdata_param_t));
-			user_para_info.pbuf_addr= (void*)(size_t)data;
+			user_para_info.pbuf_addr = (void*)(size_t)data;
 			user_para_info.buf_len = sizeof(data);
-			user_para_info.instance_id = 0;
+			user_para_info.instance_id = read_vdec_id;
 
 			if (-1 == ioctl(fd, AMSTREAM_IOC_UD_BUF_READ, &user_para_info))
 				AM_DEBUG(0, "call AMSTREAM_IOC_UD_BUF_READ failed\n");
-			//AM_DEBUG(0, "ioctl left data: %d",user_para_info.meta_info.records_in_que);
+//			AM_DEBUG(0, "vdec_id %d real_id %d ioctl left data: %d",
+//			vdec_ids, read_vdec_id, user_para_info.meta_info.records_in_que);
 
 			r = user_para_info.data_size;
 			r = (r > MAX_CC_DATA_LEN) ? MAX_CC_DATA_LEN : r;

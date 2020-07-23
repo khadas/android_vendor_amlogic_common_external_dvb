@@ -143,16 +143,16 @@ struct userdata_param_t {
 static void dump_user_data(const uint8_t *data, int len)
 {
 	int i;
-	
+
 	fprintf(stderr, "-------------------------------------------\n");
-	fprintf(stderr, "read %d bytes data:\n", len);	
+	fprintf(stderr, "read %d bytes data:\n", len);
 	for(i=0;i<len;i++)
 	{
 		fprintf(stderr, "%02x ", data[i]);
-		if(((i+1)%16)==0) 
+		if (((i+1)%16) == 0)
 			fprintf(stderr, "\n");
 	}
-	
+
 	fprintf(stderr, "\n-------------------------------------------\n");
 	fprintf(stderr, "\n");
 }
@@ -188,8 +188,8 @@ int main(int argc, char **argv)
 	uint8_t *pd = data;
 	int left = 0;
 	int vdec_ids;
+	int real_vdec_id;
 	struct userdata_param_t user_para_info;
-
 
 	fd = open("/dev/amstream_userdata", O_RDONLY);
 	if (fd < 0){
@@ -211,15 +211,15 @@ int main(int argc, char **argv)
 		vdec_ids = 0;
 		if (-1 == ioctl(fd, AMSTREAM_IOC_UD_AVAIBLE_VDEC, &vdec_ids)) {
 			printf("get avaible vdec failed");
+			continue;
 		} else {
 			printf("get avaible vdec OK: 0x%x\n", vdec_ids);
 		}
 
-		if (!(vdec_ids & 1))
-			continue;
+		real_vdec_id = ffs(vdec_ids) - 1;
 
 		if (flush) {
-			ioctl(fd, AMSTREAM_IOC_UD_FLUSH_USERDATA, 0);
+			ioctl(fd, AMSTREAM_IOC_UD_FLUSH_USERDATA, &real_vdec_id);
 			flush = 0;
 			continue;
 		}
@@ -227,6 +227,8 @@ int main(int argc, char **argv)
 		memset(&user_para_info, 0, sizeof(struct userdata_param_t));
 		user_para_info.pbuf_addr= (void*)data;
 		user_para_info.buf_len = sizeof(data);
+		user_para_info.instance_id = real_vdec_id;
+
 		if (-1 == ioctl(fd, AMSTREAM_IOC_UD_BUF_READ, &user_para_info))
 			printf("call AMSTREAM_IOC_UD_BUF_READ failed\n");
 		printf("ioctl left data: %d\n",user_para_info.meta_info.records_in_que);
