@@ -5920,10 +5920,11 @@ static void* aml_av_monitor_thread(void *arg)
 #endif
 #endif
 		if (!av_paused && dev->mode == AV_INJECT) {
-			if (has_video && (vbuf_level < DEC_STOP_VIDEO_LEVEL))
+			if ((!has_video || (vbuf_level < DEC_STOP_VIDEO_LEVEL))
+			&& (!has_audio || adec_start && (abuf_level < DEC_STOP_AUDIO_LEVEL))) {
 				av_paused = AM_TRUE;
-			if (has_audio && adec_start && (abuf_level < DEC_STOP_AUDIO_LEVEL))
-				av_paused = AM_TRUE;
+				AM_DEBUG(1, "[avmon] av_paused, vbuf_level:%d, abuf_level:%d", vbuf_level, abuf_level);
+			}
 
 			if (av_paused) {
 				if (has_audio && adec_start) {
