@@ -4749,6 +4749,18 @@ static int aml_set_sync_mode(AM_AV_Device_t *dev, int mode)
 	return AM_FileEcho(TSYNC_MODE_FILE, mode_str);
 }
 
+static void patch_vdec(AM_Bool_t has_video, AM_AV_VFormat_t fmt)
+{
+	#define DOUBLE_WRITE_MODE "/sys/module/amvdec_h265/parameters/double_write_mode"
+	if (has_video && (fmt == VFORMAT_HEVC)) {
+		AM_DEBUG(1, "patch vdec on");
+		AM_FileEcho(DOUBLE_WRITE_MODE, "3");
+	} else {
+		AM_DEBUG(1, "patch vdec off");
+		AM_FileEcho(DOUBLE_WRITE_MODE, "0");
+	}
+}
+
 static AM_ErrorCode_t aml_start_ts_mode(AM_AV_Device_t *dev, AV_TSPlayPara_t *tp, AM_Bool_t create_thread)
 {
 	AV_TSData_t *ts;
@@ -4774,6 +4786,8 @@ static AM_ErrorCode_t aml_start_ts_mode(AM_AV_Device_t *dev, AV_TSPlayPara_t *tp
 
 	/*patch dec control*/
 	set_dec_control(has_video);
+	/*patch vdec*/
+	patch_vdec(has_video, tp->vfmt);
 
 #ifndef ENABLE_PCR
 	if (ts->vid_fd != -1){
@@ -5065,6 +5079,8 @@ static int aml_close_ts_mode(AM_AV_Device_t *dev, AM_Bool_t destroy_thread)
 
 	/*unpatch dec control*/
 	set_dec_control(AM_FALSE);
+	/*unpatch vdec*/
+	patch_vdec(AM_FALSE, 0);
 
 	AM_DEBUG(1, "close ts mode end.");
 	return 0;
