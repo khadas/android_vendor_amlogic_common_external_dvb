@@ -444,7 +444,8 @@ AM_ErrorCode_t AM_DMX_AllocateFilter(int dev_no, int *fhandle)
 	assert(fhandle);
 	
 	AM_TRY(dmx_get_openned_dev(dev_no, &dev));
-	
+
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	for(fid=0; fid<DMX_FILTER_COUNT; fid++)
@@ -477,6 +478,7 @@ AM_ErrorCode_t AM_DMX_AllocateFilter(int dev_no, int *fhandle)
 	}
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
@@ -504,7 +506,8 @@ AM_ErrorCode_t AM_DMX_SetSecFilter(int dev_no, int fhandle, const struct dmx_sct
 		AM_DEBUG(1, "demux do not support set_sec_filter");
 		return AM_DMX_ERR_NOT_SUPPORTED;
 	}
-	
+
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	ret = dmx_get_used_filter(dev, fhandle, &filter);
@@ -531,6 +534,7 @@ AM_ErrorCode_t AM_DMX_SetSecFilter(int dev_no, int fhandle, const struct dmx_sct
 	}
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
@@ -558,7 +562,8 @@ AM_ErrorCode_t AM_DMX_SetPesFilter(int dev_no, int fhandle, const struct dmx_pes
 		AM_DEBUG(1, "demux do not support set_pes_filter");
 		return AM_DMX_ERR_NOT_SUPPORTED;
 	}
-	
+
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	ret = dmx_get_used_filter(dev, fhandle, &filter);
@@ -576,6 +581,7 @@ AM_ErrorCode_t AM_DMX_SetPesFilter(int dev_no, int fhandle, const struct dmx_pes
 	}
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
@@ -594,7 +600,8 @@ AM_ErrorCode_t AM_DMX_FreeFilter(int dev_no, int fhandle)
 	AM_ErrorCode_t ret = AM_SUCCESS;
 	
 	AM_TRY(dmx_get_openned_dev(dev_no, &dev));
-	
+
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	ret = dmx_get_used_filter(dev, fhandle, &filter);
@@ -606,6 +613,7 @@ AM_ErrorCode_t AM_DMX_FreeFilter(int dev_no, int fhandle)
 	}
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
@@ -625,6 +633,7 @@ AM_ErrorCode_t AM_DMX_StartFilter(int dev_no, int fhandle)
 	
 	AM_TRY(dmx_get_openned_dev(dev_no, &dev));
 	
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	ret = dmx_get_used_filter(dev, fhandle, &filter);
@@ -646,6 +655,7 @@ AM_ErrorCode_t AM_DMX_StartFilter(int dev_no, int fhandle)
 	}
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
@@ -664,7 +674,8 @@ AM_ErrorCode_t AM_DMX_StopFilter(int dev_no, int fhandle)
 	AM_ErrorCode_t ret = AM_SUCCESS;
 	
 	AM_TRY(dmx_get_openned_dev(dev_no, &dev));
-	
+
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	ret = dmx_get_used_filter(dev, fhandle, &filter);
@@ -679,6 +690,7 @@ AM_ErrorCode_t AM_DMX_StopFilter(int dev_no, int fhandle)
 	}
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
@@ -698,7 +710,8 @@ AM_ErrorCode_t AM_DMX_SetBufferSize(int dev_no, int fhandle, int size)
 	AM_ErrorCode_t ret = AM_SUCCESS;
 	
 	AM_TRY(dmx_get_openned_dev(dev_no, &dev));
-	
+
+	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 	
 	if(!dev->drv->set_buf_size)
@@ -714,6 +727,7 @@ AM_ErrorCode_t AM_DMX_SetBufferSize(int dev_no, int fhandle, int size)
 		ret = dev->drv->set_buf_size(dev, filter, size);
 	
 	pthread_mutex_unlock(&dev->lock);
+	pthread_mutex_unlock(&am_gHwDmxLock);
 	
 	return ret;
 }
