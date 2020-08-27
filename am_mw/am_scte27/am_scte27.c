@@ -166,16 +166,17 @@ uint32_t subtitle_color_to_bitmap_color(uint32_t yCbCr)
 	else
 		A = 0x80;
 
-	Y*=8;
-	Cr*=8;
-	Cb*=8;
+	Y *= 8;
+	Cr *= 8;
+	Cb *= 8;
 
-	R = 1.164*(Y-16)+1.596*(Cr-128);
-	G = 1.164*(Y-16)-0.392*(Cb-128)-0.813*(Cr-128);
-	B = 1.164*(Y-16)+2.017*(Cb-128);
+	R = Y + 1.4075 * (Cr - 128);
+	G = Y - 0.3455 * (Cb - 128) - 0.7169 * (Cr - 128);
+	B = Y + 1.779 * (Cb - 128);
 
 	bitmap_color = (R << 24) | (G << 16) | (B << 8) | A;
-
+	bmp_log("YUV 0x%x R 0x%x G 0x%x B 0x%x, RGBA 0x%x",
+			yCbCr, R, G, B, bitmap_color);
 	return bitmap_color;
 }
 
