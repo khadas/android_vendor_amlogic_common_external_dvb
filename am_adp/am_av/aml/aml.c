@@ -4713,21 +4713,6 @@ static int aml_calc_sync_mode(AM_AV_Device_t *dev, int has_audio, int has_video,
 
 	tsync_mode = PCRMASTER;
 
-	if (ac3_amaster) {
-		//force
-		tsync_mode = AMASTER;
-		if (force_reason)
-			*force_reason = FORCE_AC3_AMASTER;
-	}
-
-	if ((aml_get_audio_digital_raw() != 0) && is_dts_dolby)
-		tsync_mode = AMASTER;
-
-	if ((tsync_mode == AMASTER) && !has_audio)
-		tsync_mode = VMASTER;
-	else if (ac3_amaster == 0)
-		tsync_mode = PCRMASTER; /*Force use pcrmaster for live-pvr-tf*/
-
 	//printf("tsync mode calc:%d v:%d a:%d af:%d force:%d\n",
 	//	tsync_mode, has_video, has_audio, afmt, force_reason? *force_reason : 0);
 
