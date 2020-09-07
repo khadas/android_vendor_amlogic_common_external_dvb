@@ -54,6 +54,7 @@ enum AM_REC_ErrorCode
 	AM_REC_ERR_CANNOT_WRITE_FILE,		/**< Write file failed*/
 	AM_REC_ERR_CANNOT_ACCESS_FILE,		/**< Access deny*/
 	AM_REC_ERR_DVR,                         /**< DVR device error*/
+	AM_REC_ERR_CANNOT_WRITE_FILE_NO_SPACE,		/**< Write file failed, due to no space*/
 	AM_REC_ERR_END
 };
 

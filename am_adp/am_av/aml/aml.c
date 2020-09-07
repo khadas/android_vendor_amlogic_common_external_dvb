@@ -4091,7 +4091,7 @@ static AM_ErrorCode_t aml_timeshift_fill_data(AM_AV_Device_t *dev, uint8_t *data
 			}
 		}
 
-		ret = AM_TFile_Write(tshift->file, data, size);
+		ret = AM_TFile_Write(tshift->file, data, size, NULL);
 		if (ret != (ssize_t)size)
 		{
 			AM_DEBUG(1, "Write timeshift data to file failed");

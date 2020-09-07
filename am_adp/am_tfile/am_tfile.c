@@ -258,7 +258,7 @@ static int aml_tfile_detach_timer(AM_TFile_t tfile)
 	return 0;
 }
 
-static int aml_timeshift_data_write(int fd, uint8_t *buf, int size)
+static int aml_timeshift_data_write(int fd, uint8_t *buf, int size, int *err)
 {
 	int ret;
 	int left = size;
@@ -267,6 +267,10 @@ static int aml_timeshift_data_write(int fd, uint8_t *buf, int size)
 	while (left > 0)
 	{
 		ret = write(fd, p, left);
+
+		if (err)
+			*err = errno;
+
 		if (ret == -1)
 		{
 			if (errno != EINTR)
@@ -405,7 +409,7 @@ static ssize_t aml_timeshift_subfile_read(AM_TFile_t tfile, uint8_t *buf, size_t
 	return ret;
 }
 
-static ssize_t aml_timeshift_subfile_write(AM_TFile_t tfile, uint8_t *buf, size_t size)
+static ssize_t aml_timeshift_subfile_write(AM_TFile_t tfile, uint8_t *buf, size_t size, int *err)
 {
 	ssize_t ret = 0;
 	loff_t fsize;
@@ -449,12 +453,12 @@ static ssize_t aml_timeshift_subfile_write(AM_TFile_t tfile, uint8_t *buf, size_
 			AM_DEBUG(1, "[tfile] Switching to file index %d for writing...\n",
 				tfile->cur_wsub_file->findex);
 			lseek64(tfile->cur_wsub_file->wfd, 0, SEEK_SET);
-			ret = aml_timeshift_subfile_write(tfile, buf, size);
+			ret = aml_timeshift_subfile_write(tfile, buf, size, err);
 		}
 	}
 	else
 	{
-		ret = aml_timeshift_data_write(tfile->cur_wsub_file->wfd, buf, size);
+		ret = aml_timeshift_data_write(tfile->cur_wsub_file->wfd, buf, size, err);
 	}
 
 	return ret;
@@ -941,7 +945,7 @@ read_done:
 	return ret;
 }
 
-ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size)
+ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size, int *sys_err)
 {
 	ssize_t ret = 0, ret2 = 0;
 	size_t len1 = 0, len2 = 0;
@@ -960,7 +964,7 @@ ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size)
 	if (! tfile->loop)
 	{
 		/* Normal write */
-		ret = aml_timeshift_subfile_write(tfile, buf, size);
+		ret = aml_timeshift_subfile_write(tfile, buf, size, sys_err);
 		if (ret > 0)
 		{
 			pthread_mutex_lock(&tfile->lock);
@@ -1000,7 +1004,7 @@ ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size)
 	if (len1 > 0)
 	{
 		/*write -> end*/
-		ret = aml_timeshift_subfile_write(tfile, buf, len1);
+		ret = aml_timeshift_subfile_write(tfile, buf, len1, sys_err);
 		if (ret != (ssize_t)len1)
 			write_fail = 1;
 
@@ -1021,7 +1025,7 @@ ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size)
 		/*rewind the file*/
 		aml_timeshift_subfile_seek(tfile, 0, AM_FALSE);
 
-		ret2 = aml_timeshift_subfile_write(tfile, buf+len1, len2);
+		ret2 = aml_timeshift_subfile_write(tfile, buf+len1, len2, sys_err);
 		if (ret2 != (ssize_t)len2)
 			write_fail = 1;
 

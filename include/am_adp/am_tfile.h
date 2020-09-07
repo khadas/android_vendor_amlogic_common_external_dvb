@@ -159,7 +159,7 @@ extern ssize_t AM_TFile_Read(AM_TFile_t tfile, uint8_t *buf, size_t size, int ti
  * \retval AM_SUCCESS On success
  * \return Error code
  */
-extern ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size);
+extern ssize_t AM_TFile_Write(AM_TFile_t tfile, uint8_t *buf, size_t size, int *sys_err);
 
 /**\brief Seek a TFile
  * \param[out] tfile tfile handler

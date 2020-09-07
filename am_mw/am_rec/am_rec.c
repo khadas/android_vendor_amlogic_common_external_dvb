@@ -368,7 +368,7 @@ static AM_ErrorCode_t am_rec_start_dvr(AM_REC_Recorder_t *rec)
 }
 
 /**\brief 写录像数据到文件*/
-static int am_rec_data_write(AM_REC_Recorder_t *rec, uint8_t *buf, int size)
+static int am_rec_data_write(AM_REC_Recorder_t *rec, uint8_t *buf, int size, int *err)
 {
 	int ret;
 	int left = size;
@@ -377,6 +377,8 @@ static int am_rec_data_write(AM_REC_Recorder_t *rec, uint8_t *buf, int size)
 	while (left > 0)
 	{
 		ret = write(rec->rec_fd, p, left);
+		if (err)
+			*err = errno;
 		if (ret == -1)
 		{
 			if (errno == EFBIG)
@@ -655,9 +657,12 @@ static void *am_rec_record_thread(void* arg)
 		{
 			if (rec->tfile_flag & REC_TFILE_FLAG_AUTO_CREATE)
 			{
-				if (AM_TFile_Write(rec->tfile, pdata, ldata) != ldata)
+				int sys_err = 0;
+				if (AM_TFile_Write(rec->tfile, pdata, ldata, &sys_err) != ldata)
 				{
 					err = AM_REC_ERR_CANNOT_WRITE_FILE;
+					if (sys_err == ENOSPC)
+						err = AM_REC_ERR_CANNOT_WRITE_FILE_NO_SPACE;
 					break;
 				}
 #ifdef SUPPORT_CAS
@@ -679,9 +684,12 @@ static void *am_rec_record_thread(void* arg)
 		}
 		else
 		{
-			if (am_rec_data_write(rec, pdata, ldata) != ldata)
+			int sys_err = 0;
+			if (am_rec_data_write(rec, pdata, ldata, &sys_err) != ldata)
 			{
 				err = AM_REC_ERR_CANNOT_WRITE_FILE;
+				if (sys_err == ENOSPC)
+					err = AM_REC_ERR_CANNOT_WRITE_FILE_NO_SPACE;
 				break;
 			}
 			else if (! rec->rec_start_time)
@@ -732,7 +740,9 @@ close_file:
 	}
 
 	/* Maybe there is no space left in disk, we need to remove this empty file */
-	if (err == AM_REC_ERR_CANNOT_WRITE_FILE &&
+	if ((err == AM_REC_ERR_CANNOT_WRITE_FILE
+		|| err == AM_REC_ERR_CANNOT_WRITE_FILE_NO_SPACE)
+		&&
 		am_rec_get_file_size(rec) <= 0)
 	{
 		AM_DEBUG(1, "unliking empty file: %s", rec->rec_file_name);
