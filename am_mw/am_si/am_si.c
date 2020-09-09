@@ -1604,7 +1604,7 @@ AM_ErrorCode_t AM_SI_GetDVBTextCodingAndData(char *in, int in_len, char *coding,
 			return AM_FAILURE;
 
 		/*调整输入*/
-		if (fbyte < 0x1f)
+		if (fbyte < 0x1f && fbyte != 0x10)
 			*offset = 1;
 
 		AM_DEBUG(2,"%s in[0]=0x%x-\n",__FUNCTION__, in[0]);
