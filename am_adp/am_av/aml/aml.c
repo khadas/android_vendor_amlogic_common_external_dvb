@@ -6513,6 +6513,8 @@ static AM_ErrorCode_t aml_close_mode(AM_AV_Device_t *dev, AV_PlayMode_t mode)
         dev->res_fd = -1;
     }
 #endif
+        AM_FileEcho(TSYNC_MODE_FILE, "1");
+        AM_DEBUG(1,"[aml_close_mode]  set sync mode to 1\n");
 
 	return AM_SUCCESS;
 }
