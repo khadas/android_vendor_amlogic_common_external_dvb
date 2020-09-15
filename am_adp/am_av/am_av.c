@@ -1152,7 +1152,6 @@ AM_ErrorCode_t AM_AV_StartInject(int dev_no, const AM_AV_InjectPara_t *para)
 
 	AM_TRY(av_get_openned_dev(dev_no, &dev));
 
-	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 
 	ret = av_start(dev, AV_INJECT, (void*)para);
@@ -1164,7 +1163,6 @@ AM_ErrorCode_t AM_AV_StartInject(int dev_no, const AM_AV_InjectPara_t *para)
 	}
 
 	pthread_mutex_unlock(&dev->lock);
-	pthread_mutex_unlock(&am_gHwDmxLock);
 
 	return ret;
 }
@@ -1214,7 +1212,6 @@ AM_ErrorCode_t AM_AV_InjectData(int dev_no, AM_AV_InjectType_t type, uint8_t *da
 
 	AM_TRY(av_get_openned_dev(dev_no, &dev));
 
-	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 
 	if (!(dev->mode & AV_INJECT))
@@ -1230,7 +1227,6 @@ AM_ErrorCode_t AM_AV_InjectData(int dev_no, AM_AV_InjectType_t type, uint8_t *da
 	}
 
 	pthread_mutex_unlock(&dev->lock);
-	pthread_mutex_unlock(&am_gHwDmxLock);
 
 	return ret;
 }
@@ -1248,13 +1244,11 @@ AM_ErrorCode_t AM_AV_StopInject(int dev_no)
 
 	AM_TRY(av_get_openned_dev(dev_no, &dev));
 
-	pthread_mutex_lock(&am_gHwDmxLock);
 	pthread_mutex_lock(&dev->lock);
 
 	ret = av_stop(dev, AV_INJECT);
 
 	pthread_mutex_unlock(&dev->lock);
-	pthread_mutex_unlock(&am_gHwDmxLock);
 
 	return ret;
 }
