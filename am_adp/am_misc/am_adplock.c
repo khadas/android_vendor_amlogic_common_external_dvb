@@ -27,5 +27,4 @@
  ***************************************************************************/
 
 pthread_mutex_t am_gAdpLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t am_gHwDmxLock = PTHREAD_MUTEX_INITIALIZER;
 
