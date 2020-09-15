@@ -4041,6 +4041,7 @@ wait_for_next_loop:
 	}
 
 	ioctl(tshift->ts.vid_fd, AMSTREAM_IOC_TRICKMODE, TRICKMODE_NONE);
+	AM_DEBUG(1, "set video black:%ll at exit timeshift", tshift->dev->video_blackout);
 	AM_FileEcho(VID_BLACKOUT_FILE, tshift->dev->video_blackout ? "1" : "0");
 	AM_DEBUG(1, "[timeshift] timeshift player thread exit end");
 	return NULL;
@@ -5222,7 +5223,7 @@ static void* aml_av_monitor_thread(void *arg)
 #define REPLAY_TIME_INTERVAL   1000
 
 	int replay_done = 0;
-
+	dev->b_play_start = AM_TRUE;
 	if (dev->mode == AV_TIMESHIFT) {
 		AV_TimeshiftData_t *tshift_d = (AV_TimeshiftData_t*)dev->timeshift_player.drv_data;
 		mon = &dev->timeshift_player.mon;
@@ -5256,8 +5257,13 @@ static void* aml_av_monitor_thread(void *arg)
 	adec_start = (adec_handle != NULL);
 #endif
 
-	if (dev->mode != AV_TIMESHIFT)
-		AM_FileEcho(VID_BLACKOUT_FILE, dev->video_blackout ? "1" : "0");
+	if (dev->mode != AV_TIMESHIFT) {
+		//set default value to 0. for jira OTT-13094
+		//vfm path reset will black crean when set 1.
+		//so we set to 0 fdefault，set user set value before stop play
+		AM_DEBUG(1,"set video black 0 before play start");
+		AM_FileEcho(VID_BLACKOUT_FILE, "0");
+	}
 
 	pthread_mutex_lock(&gAVMonLock);
 
@@ -6161,14 +6167,17 @@ static void* aml_av_monitor_thread(void *arg)
 
 	pthread_mutex_unlock(&gAVMonLock);
 
+	dev->b_play_start = AM_FALSE;
 #ifndef ENABLE_PCR
 	if (resample_type) {
 		AM_FileEcho(ENABLE_RESAMPLE_FILE, "0");
 	}
 #endif
 
-	if (dev->mode != AV_TIMESHIFT)
+	if (dev->mode != AV_TIMESHIFT) {
+		AM_DEBUG(1, "set video black:%d at exit mon thread", dev->video_blackout);
 		AM_FileEcho(VID_BLACKOUT_FILE, dev->video_blackout ? "1" : "0");
+	}
 
 	if (bypass_di) {
 		AM_FileEcho(DI_BYPASS_FILE, "0");
@@ -6314,6 +6323,9 @@ static AM_ErrorCode_t aml_start_mode(AM_AV_Device_t *dev, AV_PlayMode_t mode, vo
 	dev->replay_enable = property_get_int32(REPLAY_ENABLE_PROP, 0);
 	AM_DEBUG(1, "set replay_enable=%d\n", dev->replay_enable);
 #endif
+	//SET BLACK MODE TO 0 FEFORE PLAY START
+	AM_DEBUG(1,"set video black 0 before play start AT START MODE");
+	AM_FileEcho(VID_BLACKOUT_FILE, "0");
 	switch (mode)
 	{
 		case AV_PLAY_VIDEO_ES:
@@ -6456,7 +6468,11 @@ static AM_ErrorCode_t aml_close_mode(AM_AV_Device_t *dev, AV_PlayMode_t mode)
 	AV_InjectData_t *inj;
 	AV_TimeshiftData_t *tshift;
 	int fd, ret;
-
+	//resume user set value for video black or not
+	if (dev->mode != AV_TIMESHIFT) {
+		AM_DEBUG(1, "set video black:%d at close mode", dev->video_blackout);
+		AM_FileEcho(VID_BLACKOUT_FILE, dev->video_blackout ? "1" : "0");
+	}
 	switch (mode)
 	{
 		case AV_PLAY_VIDEO_ES:
@@ -6754,10 +6770,19 @@ static AM_ErrorCode_t aml_set_video_para(AM_AV_Device_t *dev, AV_VideoParaType_t
 		break;
 		case AV_VIDEO_PARA_BLACKOUT:
 			if (!(dev->mode & (AV_PLAY_TS | AV_TIMESHIFT))) {
+				AM_DEBUG(1, "set video black -----set [%d][%x]", (int)((long)val), (long)val);
 				name = VID_BLACKOUT_FILE;
 				cmd = ((long)val)?"1":"0";
+				if (dev->b_play_start == AM_TRUE) {
+					AM_DEBUG(1, "set video black -----has start");
+					//not change defaule vaule 0 to user set value.
+					//for jira OTT-13094
+					cmd = "0";
+					AM_DEBUG(1, "set video black cmd:%s black:%d  has start", cmd, dev->video_blackout);
+				}
 			}
 			dev->video_blackout = (long)val;
+			AM_DEBUG(1, "set video black cmd:%s black:%d at set", cmd, dev->video_blackout);
 #if 0
 #ifdef AMSTREAM_IOC_CLEAR_VBUF
 			if((int)val)
