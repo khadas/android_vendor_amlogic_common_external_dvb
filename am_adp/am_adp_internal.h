@@ -29,6 +29,7 @@ extern "C"
 
 /**\brief ADP全局锁*/
 extern pthread_mutex_t am_gAdpLock;
+extern pthread_mutex_t am_gHwDmxLock;
 
 #ifdef __cplusplus
 }
