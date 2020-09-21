@@ -58,7 +58,7 @@
 #define PAT_TIMEOUT 3000
 #define PMT_TIMEOUT 3000
 #define SDT_TIMEOUT 6000
-#define NIT_TIMEOUT 10000
+#define NIT_TIMEOUT 15000
 #define CAT_TIMEOUT 3000
 #define BAT_TIMEOUT 10000
 int am_scan_mgt_timeout = 2500;
@@ -5519,7 +5519,7 @@ static void am_scan_get_wait_timespec(AM_SCAN_Scanner_t *scanner, struct timespe
 			end = scanner->dtvctl.table.end_time;\
 			rel = am_scan_compare_timespec(&scanner->dtvctl.table.end_time, &now);\
 			if (rel <= 0){\
-				AM_DEBUG(1, "%s:0x%x timeout", scanner->dtvctl.table.tname, scanner->dtvctl.table.pid);\
+				AM_DEBUG(1, "%s:0x%x timeout (%d)", scanner->dtvctl.table.tname, scanner->dtvctl.table.pid, scanner->dtvctl.table.timeout);\
 				scanner->dtvctl.table.data_arrive_time = 1;/*just mark it*/\
 				scanner->dtvctl.table.done(scanner);\
 			}\
