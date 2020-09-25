@@ -162,7 +162,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include/am_adp\
 		   common/include/linux/amlogic
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28&& echo OK),OK)
-    LOCAL_CFLAGS += -DRESOURCE_MANAGER
+    #LOCAL_CFLAGS += -DRESOURCE_MANAGER
     LOCAL_C_INCLUDES += vendor/amlogic/common/mediahal_sdk/include
 ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
     LOCAL_C_INCLUDES += external/icu/icu4c/source/common 
@@ -337,7 +337,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include/am_adp\
 		   common/include/linux/amlogic
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28&& echo OK),OK)
-    LOCAL_CFLAGS+= -DRESOURCE_MANAGER
+    #LOCAL_CFLAGS+= -DRESOURCE_MANAGER
     LOCAL_C_INCLUDES += vendor/amlogic/common/mediahal_sdk/include
     ifeq ($(BOARD_COMPILE_IN_SYSTEM), true)
         LOCAL_C_INCLUDES += external/icu/icu4c/source/common
@@ -663,7 +663,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include/am_adp\
 		   common/include/linux/amlogic
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28&& echo OK),OK)
-LOCAL_CFLAGS += -DUSE_VENDOR_ICU -DRESOURCE_MANAGER
+LOCAL_CFLAGS += -DUSE_VENDOR_ICU #-DRESOURCE_MANAGER
 LOCAL_C_INCLUDES += vendor/amlogic/common/mediahal_sdk/include
      ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 29&& echo OK),OK)
 	    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../prebuilt/icu/include
