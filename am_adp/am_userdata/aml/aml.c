@@ -819,16 +819,19 @@ static int aml_process_h264_userdata(AM_USERDATA_Device_t *dev, uint8_t *data, i
 
 			pd   += pl;
 			left -= pl + hdr;
-			r	+= pl + hdr;
+			r    += pl + hdr;
 		} else if (MOD_ON_AFD(ud->mode) && IS_H264_AFD(pd)) {
 			AM_USERDATA_AFD_t afd = *((AM_USERDATA_AFD_t*)(pd + 7));
 			afd.reserved = afd.pts = 0;
 			AM_EVT_Signal(dev->dev_no, AM_USERDATA_EVT_AFD, (void*)&afd);
+			pd   += 8;
+			left -= 8;
+			r    += 8;
 			break;
 		} else {
 			pd   += 8;
 			left -= 8;
-			r	+= 8;
+			r    += 8;
 		}
 	}
 
@@ -892,24 +895,26 @@ static void* aml_userdata_thread (void *arg)
 			if (!ud->running)
 				break;
 
-			memset(&user_para_info, 0, sizeof(struct userdata_param_t));
-			user_para_info.pbuf_addr = (void*)(size_t)data;
-			user_para_info.buf_len = sizeof(data);
-			user_para_info.instance_id = read_vdec_id;
+			if (left < 8) {
+				memset(&user_para_info, 0, sizeof(struct userdata_param_t));
+				user_para_info.pbuf_addr = (void*)(size_t)data;
+				user_para_info.buf_len = sizeof(data);
+				user_para_info.instance_id = read_vdec_id;
 
-			if (-1 == ioctl(fd, AMSTREAM_IOC_UD_BUF_READ, &user_para_info))
-				AM_DEBUG(0, "call AMSTREAM_IOC_UD_BUF_READ failed\n");
-//			AM_DEBUG(0, "vdec_id %d real_id %d ioctl left data: %d",
-//			vdec_ids, read_vdec_id, user_para_info.meta_info.records_in_que);
+				if (-1 == ioctl(fd, AMSTREAM_IOC_UD_BUF_READ, &user_para_info))
+					AM_DEBUG(0, "call AMSTREAM_IOC_UD_BUF_READ failed\n");
+	//			AM_DEBUG(0, "vdec_id %d real_id %d ioctl left data: %d",
+	//			vdec_ids, read_vdec_id, user_para_info.meta_info.records_in_que);
 
-			r = user_para_info.data_size;
-			r = (r > MAX_CC_DATA_LEN) ? MAX_CC_DATA_LEN : r;
+				r = user_para_info.data_size;
+				r = (r > MAX_CC_DATA_LEN) ? MAX_CC_DATA_LEN : r;
 
-			if (r <= 0)
-				continue;
-			aml_swap_data(data + left, r);
-			left += r;
-			pd = data;
+				if (r <= 0)
+					continue;
+				aml_swap_data(data + left, r);
+				left += r;
+				pd = data;
+			}
 #if 0
 			for (i=0; i<left; i++)
 				sprintf(&display_buffer[i*3], " %02x", data[i]);
@@ -952,7 +957,7 @@ static void* aml_userdata_thread (void *arg)
 		}
 
 		left -= r;
-		}while(user_para_info.meta_info.records_in_que > 1);
+		}while(user_para_info.meta_info.records_in_que > 1 || (left >= 8));
 	}
 	AM_DEBUG(0, "aml userdata thread exit");
 	return NULL;
