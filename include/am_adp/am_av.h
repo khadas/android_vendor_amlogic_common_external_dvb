@@ -402,6 +402,7 @@ typedef struct
 	int              vb_size;     /**< Video buffer size*/
 	int              vb_data;     /**< Data size in the video buffer*/
 	int              vb_free;     /**< Free size in the video buffer*/
+	unsigned int     stat;        /**< Decoder status>*/
 	AM_AV_VideoAspectRatio_t vid_ratio; /**< Video source aspect ratio*/
 }AM_AV_VideoStatus_t;
 

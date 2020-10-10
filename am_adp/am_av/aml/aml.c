@@ -5031,16 +5031,18 @@ static int aml_close_ts_mode(AM_AV_Device_t *dev, AM_Bool_t destroy_thread)
 {
 	AV_TSData_t *ts;
 	int fd;
-
+	AM_DEBUG(1, "close ts mode start.");
 	if (dev->afd_enable)
 		aml_stop_afd(dev);
 
 	if (destroy_thread)
 		aml_stop_av_monitor(dev, &dev->ts_player.mon);
 
+	AM_DEBUG(1, "close amstream dev start.");
 	ts = (AV_TSData_t*)dev->ts_player.drv_data;
 	if (ts->fd != -1)
 		close(ts->fd);
+	AM_DEBUG(1, "close amstream dev end.");
 	if (ts->vid_fd != -1)
 		close(ts->vid_fd);
 
@@ -5167,6 +5169,8 @@ static void* aml_av_monitor_thread(void *arg)
 	int heart_beat_time = 5000;
 	int abuf_level = 0, vbuf_level = 0;
 	int abuf_size = 0, vbuf_size = 0;
+	float audio_buf_level = 0.00f, video_buf_level = 0.00f;
+	int update_buflevel;
 	unsigned int abuf_read_ptr = 0, vbuf_read_ptr = 0;
 	unsigned int last_abuf_read_ptr = 0, last_vbuf_read_ptr = 0;
 	int arp_stop_time = 0, vrp_stop_time = 0;
@@ -5258,6 +5262,7 @@ static void* aml_av_monitor_thread(void *arg)
 		is_dts_dolby = 1;
 	}
 	AM_TIME_GetClock(&last_time);
+	AM_TIME_GetClock(&update_buflevel);
 	while (mon->av_thread_running) {
 
 		if (!adec_start || (has_video && no_video))
@@ -5307,6 +5312,8 @@ static void* aml_av_monitor_thread(void *arg)
 		if (has_audio && (ioctl(ts->fd, AMSTREAM_IOC_AB_STATUS, (unsigned long)&astatus) != -1)) {
 			abuf_size  = astatus.status.size;
 			abuf_level = astatus.status.data_len;
+			if (astatus.status.size != 0)
+				audio_buf_level = (float)astatus.status.data_len / astatus.status.size;
 			abuf_read_ptr = astatus.status.read_pointer;
 		} else {
 			if (has_audio)
@@ -5319,6 +5326,8 @@ static void* aml_av_monitor_thread(void *arg)
 		if (has_video && (ioctl(ts->fd, AMSTREAM_IOC_VB_STATUS, (unsigned long)&vstatus) != -1)) {
 			vbuf_size  = vstatus.status.size;
 			vbuf_level = vstatus.status.data_len;
+			if (vstatus.status.size != 0)
+				video_buf_level = (float)vstatus.status.data_len / vstatus.status.size;
 			vbuf_read_ptr = vstatus.status.read_pointer;
 			//is_hd_video = vstatus.vstatus.width > 720;
 		} else {
@@ -5328,6 +5337,9 @@ static void* aml_av_monitor_thread(void *arg)
 			vbuf_level = 0;
 			vbuf_read_ptr = 0;
 		}
+		if ((audio_buf_level >= 0.97) || (video_buf_level >= 0.99))
+			AM_DEBUG(1,"[aml_av_monitor_thread] audio_buf_level= %.5f, video_buf_level=%.5f, Don't writedata !!!",
+				audio_buf_level, video_buf_level);
 
 		if (vbuf_level == 0) {
 			if(!vbuf_level_empty_time)
@@ -5538,6 +5550,10 @@ static void* aml_av_monitor_thread(void *arg)
 			dmx_vpts_stop_time = 0;
 		}
 
+		if ((now - update_buflevel) >= 1000) {
+			update_buflevel = now;
+			AM_DEBUG(1,"tsync_mode:%d, a_datalen:%d, v_datalen:%d, audio_buf_level= %.5f, video_buf_level=%.5f, apts:0x%x, vpts:0x%x, dmxapts:0x%x, dmxvpts:0x%x",tsync_mode, abuf_level, vbuf_level, audio_buf_level, video_buf_level, apts, vpts, dmx_apts, dmx_vpts);
+		}
 #if 0
 		AM_DEBUG(3, "audio level:%d cache:%d, video level:%d cache:%d, resample:%d",
 				abuf_level, adec_start ? dmx_apts - apts : dmx_apts - first_dmx_apts,
@@ -7185,6 +7201,7 @@ static AM_ErrorCode_t aml_get_vstatus(AM_AV_Device_t *dev, AM_AV_VideoStatus_t *
 	para->src_w     = vstatus.vstatus.width;
 	para->src_h     = vstatus.vstatus.height;
 	para->fps       = vstatus.vstatus.fps;
+	para->stat      = vstatus.vstatus.status;
 	para->vid_ratio = convert_aspect_ratio(vstatus.vstatus.euAspectRatio);
 	para->frames    = 1;
 	para->interlaced  = 1;
