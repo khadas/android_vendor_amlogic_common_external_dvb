@@ -13,8 +13,7 @@ LOCAL_C_INCLUDES := -I $(LOCAL_PATH)/../include/am_adp\
 		    -I $(LOCAL_PATH)/../include/am_adp/libdvbsi/tables\
 		    -I $(LOCAL_PATH)/am_closecaption/am_vbi\
 		    -I $(LOCAL_PATH)/../android/ndk/include\
-		    -I $(LOCAL_PATH)/../am_adp/am_open_lib/am_ci\
-		    -I $(LOCAL_PATH)/../../aml-zvbi-1.0/src
+		    -I $(LOCAL_PATH)/../am_adp/am_open_lib/am_ci
 
 #$(LOCAL_PATH)/../../libzvbi/src\
 #external/sqlite/dist\
