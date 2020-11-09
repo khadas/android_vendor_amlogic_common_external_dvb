@@ -54,12 +54,18 @@ typedef struct dvbpsi_EXTENTION_sup_audio_s
 	language_code_t	iso_639_lang_code;		/*!< ISO_639_language_code */
 } dvbpsi_EXTENTION_sup_audio_t;
 
+typedef struct dvbpsi_EXTENTION_ac4_audio_s
+{
+	uint8_t		ac4_config_flag;
+	uint8_t		ac4_toc_flag;
+} dvbpsi_EXTENTION_ac4_audio_t;
 
 typedef struct dvbpsi_EXTENTION_dr_s
 {
 	uint8_t   i_extern_des_tag;          /*!< exten des tag */
 	union {
 		dvbpsi_EXTENTION_sup_audio_t sup_audio;
+		dvbpsi_EXTENTION_ac4_audio_t ac4_audio;
 	} exten_t;							/*!< exten tag info */
 } dvbpsi_EXTENTION_dr_t;
 
@@ -95,7 +101,11 @@ typedef struct dvbpsi_EXTENTION_dr_s
 #define AM_SI_EXTEN_DESCR_RESERVED					(0x12)
 #define AM_SI_EXTEN_DESCR_URI_LINKAGE				(0x13)
 #define AM_SI_EXTEN_DESCR_BCI_ANCILLARY				(0x14)
-#define AM_SI_EXTEN_DESCR_OTHER						(0x15)
+#define AM_SI_EXTEN_DESCR_AC4						(0x15)
+#define AM_SI_EXTEN_DESCR_C2						(0x16)
+#define AM_DI_EXTEN_DESCR_AUDIO_PRESELECTION        (0x19)
+#define AM_SI_EXTEN_DESCR_OTHER						(0x20)
+
 /*****************************************************************************
  * dvbpsi_DecodeEXTENTIONDr
  *****************************************************************************/

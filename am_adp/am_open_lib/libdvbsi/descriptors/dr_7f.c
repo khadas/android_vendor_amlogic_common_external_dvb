@@ -65,12 +65,23 @@ int dvbpsi_Decode_Exten_Sup_Audio_Dr(dvbpsi_EXTENTION_dr_t * p_decoded, uint8_t 
 }
 
 /*****************************************************************************
+ * dvbpsi_Decode_Exten_AC4_Audio_Dr
+ *****************************************************************************/
+int dvbpsi_Decode_Exten_AC4_Audio_Dr(dvbpsi_EXTENTION_dr_t * p_decoded, uint8_t * p_data, uint8_t i_length)
+{
+	AM_DEBUG(1, "dr_7f dvbpsi_Decode_Exten_AC4_Audio_Dr ");
+	/*1 5 1 1 8bit mix:1 edit:5 re:1 lang:1*/
+	p_decoded->exten_t.ac4_audio.ac4_config_flag = p_data[1]; /*1000 0000*/
+	p_decoded->exten_t.ac4_audio.ac4_toc_flag = p_data[1]; /*0111 1100*/
+	return 0;
+}
+/*****************************************************************************
  * dvbpsi_DecodeEXTENTIONDr
  *****************************************************************************/
 dvbpsi_EXTENTION_dr_t * dvbpsi_DecodeEXTENTIONDr(dvbpsi_descriptor_t * p_descriptor)
 {
-  dvbpsi_EXTENTION_dr_t * p_decoded;
-  AM_DEBUG(1, "dr_7f dvbpsi_DecodeEXTENTIONDr ");
+    dvbpsi_EXTENTION_dr_t * p_decoded;
+    AM_DEBUG(1, "dr_7f dvbpsi_DecodeEXTENTIONDr ");
   /* Check the tag */
   if (p_descriptor->i_tag != 0x7f)
   {
@@ -158,6 +169,13 @@ dvbpsi_EXTENTION_dr_t * dvbpsi_DecodeEXTENTIONDr(dvbpsi_descriptor_t * p_descrip
       break;
     case AM_SI_EXTEN_DESCR_BCI_ANCILLARY:
       AM_DEBUG(1, "dr_7f exten tag AM_SI_EXTEN_DESCR_BCI_ANCILLARY ");
+      break;
+    case AM_SI_EXTEN_DESCR_AC4:
+      AM_DEBUG(1, "dr_7f exten tag AM_SI_EXTEN_DESCR_AC4 ");
+      dvbpsi_Decode_Exten_AC4_Audio_Dr(p_decoded, p_descriptor->p_data, p_descriptor->i_length);
+      break;
+    case AM_DI_EXTEN_DESCR_AUDIO_PRESELECTION:
+      AM_DEBUG(1, "dr_7f exten tag AM_DI_EXTEN_DESCR_AUDIO_PRESELECTION ");
       break;
     case AM_SI_EXTEN_DESCR_OTHER:
       AM_DEBUG(1, "dr_7f exten tag AM_SI_EXTEN_DESCR_OTHER ");

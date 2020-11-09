@@ -2078,6 +2078,22 @@ AM_ErrorCode_t AM_SI_ExtractAVFromES(dvbpsi_pmt_es_t *es, int *vid, int *vfmt, A
 		AM_DEBUG(1, "Set video format to %d", vfmt_tmp);
 		*vfmt = vfmt_tmp;
 	}
+
+	if (afmt_tmp == -1) {
+		AM_SI_LIST_BEGIN(es->p_first_descriptor, descr)
+			if (descr->i_tag == AM_SI_DESCR_EXTENSION && descr->p_decoded != NULL)
+			{
+				dvbpsi_EXTENTION_dr_t *pisod = (dvbpsi_EXTENTION_dr_t*)descr->p_decoded;
+				if (pisod->i_extern_des_tag == AM_SI_EXTEN_DESCR_AC4)
+				{
+					AM_DEBUG(1, "!!Found AC4 Descriptor!!!");
+					afmt_tmp = 29;
+					break;
+				}
+			}
+		AM_SI_LIST_END()
+	}
+
 	if (afmt_tmp != -1)
 	{
 		AM_SI_LIST_BEGIN(es->p_first_descriptor, descr)
@@ -2109,7 +2125,7 @@ AM_ErrorCode_t AM_SI_ExtractAVFromES(dvbpsi_pmt_es_t *es, int *vid, int *vfmt, A
 			}
 		AM_SI_LIST_END()
 		/* Add a audio */
-		si_add_audio(aud_info, es->i_pid, afmt_tmp, lang_tmp,audio_type,audio_exten);
+		si_add_audio(aud_info, es->i_pid, afmt_tmp, lang_tmp, audio_type, audio_exten);
 	}
 
 	return AM_SUCCESS;
