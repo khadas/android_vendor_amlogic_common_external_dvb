@@ -59,7 +59,6 @@
 		}\
 	AM_MACRO_END
 
-
 /****************************************************************************
  * Static data
  ***************************************************************************/
@@ -1839,6 +1838,7 @@ AM_ErrorCode_t AM_SI_GetAudioExten_from_PSIPAC3AStreamdes(dvbpsi_atsc_ac3_audio_
  *   - AM_SUCCESS 成功
  *   - 其他值 错误代码(见am_si.h)
  */
+
 AM_ErrorCode_t AM_SI_ExtractAVFromES(dvbpsi_pmt_es_t *es, int *vid, int *vfmt, AM_SI_AudioInfo_t *aud_info)
 {
 	char lang_tmp[3];
@@ -1846,6 +1846,9 @@ AM_ErrorCode_t AM_SI_ExtractAVFromES(dvbpsi_pmt_es_t *es, int *vid, int *vfmt, A
 	int	audio_exten=0;
 	int afmt_tmp, vfmt_tmp;
 	dvbpsi_descriptor_t *descr;
+	AM_Bool_t ac4_enable = AM_TRUE;
+	char buf[32];
+	int ret = -1;
 
 	afmt_tmp = -1;
 	vfmt_tmp = -1;
@@ -2079,7 +2082,14 @@ AM_ErrorCode_t AM_SI_ExtractAVFromES(dvbpsi_pmt_es_t *es, int *vid, int *vfmt, A
 		*vfmt = vfmt_tmp;
 	}
 
-	if (afmt_tmp == -1) {
+	ret = property_get("ro.vendor.platform.digitaltv.ms12_version", buf, NULL);
+	if (ret > 0) {
+		if (strncasecmp(buf, "v1", 2) == 0)
+			ac4_enable = AM_FALSE;
+	}
+	AM_DEBUG(1, "set ac4_enable = %d\n", ac4_enable);
+
+	if (afmt_tmp == -1 && ac4_enable) {
 		AM_SI_LIST_BEGIN(es->p_first_descriptor, descr)
 			if (descr->i_tag == AM_SI_DESCR_EXTENSION && descr->p_decoded != NULL)
 			{
