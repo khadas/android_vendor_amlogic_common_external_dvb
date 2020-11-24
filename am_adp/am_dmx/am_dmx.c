@@ -36,7 +36,7 @@
 #define DMX_SYNC
 
 #define DMX_BUF_SIZE       (4096)
-#define DMX_POLL_TIMEOUT   (200)
+#define DMX_POLL_TIMEOUT   (50)
 #ifdef CHIP_8226H
 #define DMX_DEV_COUNT      (2)
 #elif defined(CHIP_8226M) || defined(CHIP_8626X)
