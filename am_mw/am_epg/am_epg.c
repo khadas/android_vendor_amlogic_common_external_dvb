@@ -2773,6 +2773,10 @@ static void am_epg_proc_psip_eit_section(AM_EPG_Monitor_t *mon, void *eit_sectio
 {
 	TAB_CB(mon, AM_EPG_TAB_PSIP_EIT, eit_section);
 
+	dvbpsi_atsc_eit_t *eit = (dvbpsi_atsc_eit_t*)eit_section;
+	if (eit->i_protocol > 0) {
+		return;
+	}
 	if (mon->evt_cb) {
 		int evt_cnt;
 		AM_EPG_Event_t *pevents;
