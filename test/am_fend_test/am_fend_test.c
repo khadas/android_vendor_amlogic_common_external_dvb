@@ -526,7 +526,19 @@ static int open_fend(int *id, int *mode)
 
 	AM_TRY(AM_FEND_Open(*id, &para));
 
-	AM_FEND_SetMode(*id, para.mode);
+	if (*mode == 5) {
+		int ret = 0;
+		struct dtv_property p = {.cmd = DTV_DELIVERY_SYSTEM, .u.data = SYS_DVBT2};
+		struct dtv_properties props = {.num = 1, .props = &p};
+
+		printf("dvb_set_mode: SYS_DVBT2.\n");
+
+		ret = AM_FEND_SetProp(*id, &props);
+		if (ret != 0) {
+			AM_DEBUG(1, "set mode SYS_DVBT2 failed.\n");
+		}
+	} else
+		AM_FEND_SetMode(*id, para.mode);
 
 	return 0;
 }
@@ -773,10 +785,15 @@ static int lock_fend(int id, int mode)
 			prop.num = 1;
 			prop.props = &property;
 			memset(&property, 0, sizeof(property));
-			property.cmd = DTV_DELIVERY_SUB_SYSTEM;
-			property.u.data = ofdm_mode;
+
+			property.cmd = DTV_DELIVERY_SYSTEM;
+			if (ofdm_mode) {
+				property.u.data = SYS_DVBT2;
+			} else {
+				property.u.data = SYS_DVBT;
+			}
+
 			AM_FEND_SetProp(id, &prop);
-			
 		}
 		AM_TRY(AM_FEND_Lock(id, &p, &status));
 		printf("lock status: 0x%x\n", status);

@@ -559,6 +559,11 @@ static void dvb_play(int vpid, int apid, int ppid, int vfmt, int afmt, int freq,
 			p.u.qam.fec_inner = FEC_AUTO;
 			p.u.qam.modulation = femod;//QAM_64;
 		}
+		else if (para.mode == FE_QPSK)
+		{
+			printf("symbol rate: ");
+			scanf("%d", &(p.u.qpsk.symbol_rate));
+		}
 		else
 		{
 			p.inversion = INVERSION_AUTO;
