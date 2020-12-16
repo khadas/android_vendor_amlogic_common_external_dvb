@@ -485,6 +485,53 @@ AM_ErrorCode_t AM_VLFEND_GetAFC(int dev_no, int *afc)
 	return ret;
 }
 
+AM_ErrorCode_t AM_VLFEND_GetSoundSystem(int dev_no, int *sys)
+{
+	AM_ErrorCode_t ret = AM_SUCCESS;
+	struct dtv_properties props;
+	struct dtv_property prop;
+
+	assert(sys);
+
+	memset(&props, 0, sizeof(props));
+	memset(&prop, 0, sizeof(prop));
+
+	prop.cmd = V4L2_SOUND_SYS;
+	prop.u.data = 0;
+
+	props.num = 1;
+	props.props = &prop;
+
+	ret = AM_VLFEND_GetProp(dev_no, &props);
+
+	/* sys:
+	 * bit24-16: audio input system.
+	 * bit15-8 : audio input mode.
+	 * bit7-0  : audio output mode.
+	 */
+	*sys = prop.u.data;
+
+	return ret;
+}
+
+AM_ErrorCode_t AM_VLFEND_SetSoundOutputMode(int dev_no, int mode)
+{
+	AM_ErrorCode_t ret = AM_SUCCESS;
+	struct dtv_properties props;
+	struct dtv_property prop;
+
+	memset(&props, 0, sizeof(props));
+	memset(&prop, 0, sizeof(prop));
+
+	prop.cmd = V4L2_SOUND_SYS;
+	prop.u.data = mode;
+
+	props.num = 1;
+	props.props = &prop;
+
+	return AM_VLFEND_SetProp(dev_no, &props);
+}
+
 /**\brief Gets the frontend status monitoring callback function for the current registration
  * \param dev_no Device number
  * \param[out] cb Returns the registered status callback function
