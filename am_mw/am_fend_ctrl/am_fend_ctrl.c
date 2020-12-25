@@ -64,9 +64,18 @@ AM_ErrorCode_t AM_FENDCTRL_SetPara(int dev_no, const AM_FENDCTRL_DVBFrontendPara
 
 	if (para->m_type != FE_ANALOG)
 	{
-		ret = AM_FEND_SetMode(dev_no, para->m_type);
-		if (ret != AM_SUCCESS) {
-			return ret;
+		if (para->m_type == FE_ATSC && (para->atsc.para.u.vsb.modulation != VSB_8 &&
+				para->atsc.para.u.vsb.modulation != VSB_16)) {
+			/* for atsc-c */
+			ret = AM_FEND_SetDeliverySystem(dev_no, SYS_DVBC_ANNEX_B);
+			if (ret != AM_SUCCESS) {
+				return ret;
+			}
+		} else {
+			ret = AM_FEND_SetMode(dev_no, para->m_type);
+			if (ret != AM_SUCCESS) {
+				return ret;
+			}
 		}
 	}else{
 		//disable dtv demod, but it will return error.

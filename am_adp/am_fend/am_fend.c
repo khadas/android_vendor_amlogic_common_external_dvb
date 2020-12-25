@@ -1850,3 +1850,13 @@ AM_ErrorCode_t AM_FEND_GetSubSystem(int dev_no, unsigned int *sub_sys)
 	return ret;
 }
 
+AM_ErrorCode_t AM_FEND_SetDeliverySystem(int dev_no, unsigned int del_sys)
+{
+	AM_ErrorCode_t ret = AM_SUCCESS;
+	struct dtv_property p = {.cmd = DTV_DELIVERY_SYSTEM, .u.data = del_sys};
+	struct dtv_properties props = {.num = 1, .props = &p};
+
+	ret = AM_FEND_SetProp(dev_no, &props);
+
+	return ret;
+}

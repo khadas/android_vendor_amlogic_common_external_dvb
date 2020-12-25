@@ -464,6 +464,15 @@ AM_ErrorCode_t AM_FEND_SetSubSystem(int dev_no, unsigned int sub_sys);
  */
 AM_ErrorCode_t AM_FEND_GetSubSystem(int dev_no, unsigned int *sub_sys);
 
+/**\brief try to set del sys
+ *\param dev_no frontend device number
+ *\param del_sys fend type,use to indentify T or T2,C-A C-B OR C-C
+ * \return
+ *   - AM_SUCCESS On success
+ *   - or error code
+ */
+AM_ErrorCode_t AM_FEND_SetDeliverySystem(int dev_no, unsigned int del_sys);
+
 #ifdef __cplusplus
 }
 #endif
