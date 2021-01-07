@@ -35,7 +35,7 @@ class DeathNotifier: public IBinder::DeathRecipient
         }
 };
 
-static SystemControlClient *mScc = new SystemControlClient();
+static SystemControlClient *mScc = SystemControlClient::getInstance();
 static sp < DeathNotifier > amDeathNotifier;
 static Mutex amgLock;
 
