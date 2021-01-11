@@ -714,6 +714,9 @@ static int aml_process_mpeg_userdata(AM_USERDATA_Device_t *dev, uint8_t *data, i
 			AM_USERDATA_AFD_t afd = *((AM_USERDATA_AFD_t *)(pafd_hdr + 4));
 			afd.reserved = afd.pts = 0;
 			AM_EVT_Signal(dev->dev_no, AM_USERDATA_EVT_AFD, (void*)&afd);
+			pd   += 8;
+			left -= 8;
+			r	+= 8;
 			break;
 		} else {
 			pd   += 8;
