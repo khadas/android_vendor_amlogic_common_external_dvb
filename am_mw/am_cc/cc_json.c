@@ -262,12 +262,16 @@ effect_status_to_str(enum cc_effect_status status)
 	{
 		case CC_EFFECT_NONE:
 			str = "NONE";
+			break;
 		case CC_EFFECT_DISPLAY:
 			str = "DISPLAY";
+			break;
 		case CC_EFFECT_HIDE:
 			str = "HIDE";
+			break;
 		default:
 			str = "NONE";
+			break;
 	};
 	return str;
 }

@@ -396,7 +396,9 @@ static void* fend_blindscan_thread(void *arg)
 	unsigned short index = 0;
 	enum AM_FEND_DVBSx_BlindScanAPI_Status BS_Status = DVBSx_BS_Status_Init;
 
-	fend_get_openned_dev(dev_no, &dev);
+	ret = fend_get_openned_dev(dev_no, &dev);
+	if (ret != AM_SUCCESS)
+		return NULL;
 
 	while(BS_Status != DVBSx_BS_Status_Exit)
 	{
@@ -429,7 +431,7 @@ static void* fend_blindscan_thread(void *arg)
 					break;
 				}
 
-			case DVBSx_BS_Status_Wait: 		
+			case DVBSx_BS_Status_Wait:
 				{
 					ret = AM_FEND_IBlindScanAPI_GetScanEvent(dev_no, &cur_bsevent);
 					AM_DEBUG(1, "fend_blindscan_thread AM_FEND_IBlindScanAPI_GetScanEvent %d", ret);
@@ -1179,7 +1181,9 @@ static void fend_lock_cb(int dev_no, struct dvb_frontend_event *evt, void *user_
 	AM_FEND_Device_t *dev = NULL;
 	fend_lock_para_t *para = (fend_lock_para_t*)user_data;
 	
-	fend_get_openned_dev(dev_no, &dev);
+	AM_ErrorCode_t ret = fend_get_openned_dev(dev_no, &dev);
+	if (ret != AM_SUCCESS)
+		return; 
 	
 	if(!fend_para_equal(dev->curr_mode, &evt->parameters, para->para))
 		return;

@@ -1772,6 +1772,7 @@ static void am_epg_proc_psip_ett_section_def(AM_EPG_Monitor_t *mon, void *ett_se
 	if (AM_DB_GetSTMT(&update_extdescr_stmt, update_extdescr_sql_name, update_extdescr_sql, 0) != AM_SUCCESS)
 	{
 		AM_DEBUG(1, "EPG: prepare insert events stmt failed");
+		free(text);
 		return;
 	}	
 	{
@@ -1793,6 +1794,7 @@ static void am_epg_proc_psip_ett_section_def(AM_EPG_Monitor_t *mon, void *ett_se
 		else
 			AM_DEBUG(1,"%s no this event",__FUNCTION__);
 	}
+	free(text);
 }
 
 static void am_epg_proc_vct_section_def(AM_EPG_Monitor_t *mon, void *vct_section)
