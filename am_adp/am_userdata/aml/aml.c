@@ -334,11 +334,17 @@ static userdata_type aml_check_userdata_format (uint8_t *buf, int vfmt, int len)
 			{
 				return MPEG_AFD_TYPE;
 			}
+			else if (IS_H264(buf))
+			{
+				AM_DEBUG(AM_DEBUG_LEVEL,"CC format is h264_cc_type");
+				return H264_CC_TYPE;
+			}
 		}
 	}
 	else
 		AM_DEBUG(AM_DEBUG_LEVEL, "vfmt not handled");
 
+	AM_DEBUG(AM_DEBUG_LEVEL,"CC format is INVALID_TYPE");
 	return INVALID_TYPE;
 }
 
