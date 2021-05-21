@@ -74,7 +74,19 @@ typedef enum
 	AM_DMX_SRC_TS2,                    /**< TS input port 2*/
 	AM_DMX_SRC_TS3,                    /**< TS input port 3*/
 	AM_DMX_SRC_HIU,                     /**< HIU input (memory)*/
-	AM_DMX_SRC_HIU1
+	AM_DMX_SRC_HIU1,
+	AM_DMX_SRC_TS4,
+	AM_DMX_SRC_TS5,
+	AM_DMX_SRC_TS6,
+	AM_DMX_SRC_TS7,
+	AM_DMX_SRC_DMA0,
+	AM_DMX_SRC_DMA1,
+	AM_DMX_SRC_DMA2,
+	AM_DMX_SRC_DMA3,
+	AM_DMX_SRC_DMA4,
+	AM_DMX_SRC_DMA5,
+	AM_DMX_SRC_DMA6,
+	AM_DMX_SRC_DMA7,
 } AM_DMX_Source_t;
 
 /**\brief Demux device open parameters*/

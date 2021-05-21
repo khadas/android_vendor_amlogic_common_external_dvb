@@ -1,0 +1,94 @@
+// TODO:
+cc_library_static {
+    vendor: true,
+    //vendor_available: true,
+    name: "libam_sysfs_static",
+    compile_multilib: "32",
+    srcs: [
+	   "am_syswrite.cpp",
+    ],
+
+    cflags: [
+        "-std=gnu99",
+    ],
+    clang_cflags: ["-Wno-error=tautological-pointer-compare"],
+
+    arch: {
+        arm: {
+            instruction_set: "arm",
+        },
+        /*arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },*/
+    },
+
+    // TODO: include library
+    include_dirs: [
+         "vendor/amlogic/common/external/dvb/include/am_sysfs",
+         "vendor/amlogic/common/external/dvb/include/am_adp",
+         "vendor/amlogic/common/frameworks/services/systemcontrol/PQ/include",
+         "vendor/amlogic/common/frameworks/services/systemcontrol",
+    ],
+
+    shared_libs: [
+       "libcutils",
+       "liblog",
+       "libdl",
+       "libc",
+       "libutils",
+       "libbinder",
+       "libsystemcontrolservice",
+       "libam_adp",
+       "vendor.amlogic.hardware.systemcontrol@1.0",
+       "vendor.amlogic.hardware.systemcontrol@1.1",
+    ],
+}
+
+cc_library_shared {
+    name: "libam_sysfs",
+    vendor: true,
+    compile_multilib: "32",
+    arch: {
+        arm: {
+            instruction_set: "arm",
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    ldflags: ["-shared"],
+    include_dirs: [
+         "vendor/amlogic/common/external/dvb/include/am_sysfs",
+         "vendor/amlogic/common/external/dvb/include/am_adp",
+         "vendor/amlogic/common/frameworks/services/systemcontrol/PQ/include",
+         "vendor/amlogic/common/frameworks/services/systemcontrol",
+    ],
+    whole_static_libs: [
+       "libam_sysfs_static",
+    ],
+    shared_libs: [
+       "libcutils",
+       "liblog",
+       "libdl",
+       "libc",
+       "libutils",
+       "libbinder",
+       "libsystemcontrolservice",
+       "libam_adp",
+       "vendor.amlogic.hardware.systemcontrol@1.0",
+       "vendor.amlogic.hardware.systemcontrol@1.1",
+    ],
+}
+

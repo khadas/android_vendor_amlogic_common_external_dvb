@@ -35,6 +35,7 @@
 #include <am_config.h>
 #include <linux/dvb/dmx.h>
 
+
 #define open(a...)\
 	({\
 	 int ret, times=3;\
@@ -310,36 +311,147 @@ static AM_ErrorCode_t dvb_set_source(AM_DMX_Device_t *dev, AM_DMX_Source_t src)
 {
 	char buf[32];
 	char *cmd;
-	
+    	struct stat st;
+    	int r;
 	snprintf(buf, sizeof(buf), "/sys/class/stb/demux%d_source", dev->dev_no);
+
+	r = stat(buf, &st);
+	if (r == -1)
+	 {
+		int fd, source, input;
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "/dev/dvb0.demux%d", dev->dev_no);
+		fd = open(buf, O_WRONLY);
+		if (fd != -1)
+		{
+		    switch (src)
+		    {
+		    case AM_DMX_SRC_TS0:
+		        source = FRONTEND_TS0;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS1:
+		        source = FRONTEND_TS1;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS2:
+		        source = FRONTEND_TS2;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS3:
+		        source = FRONTEND_TS3;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS4:
+		        source = FRONTEND_TS4;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS5:
+		        source = FRONTEND_TS5;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS6:
+		        source = FRONTEND_TS6;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_TS7:
+		        source = FRONTEND_TS7;
+		        input = INPUT_DEMOD;
+		        break;
+		    case AM_DMX_SRC_DMA0:
+		    case AM_DMX_SRC_HIU:
+		        source = DMA_0;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA1:
+		    case AM_DMX_SRC_HIU1:
+		        source = DMA_1;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA2:
+		        source = DMA_2;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA3:
+		        source = DMA_3;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA4:
+		        source = DMA_4;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA5:
+		        source = DMA_5;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA6:
+		        source = DMA_6;
+		        input = INPUT_LOCAL;
+		        break;
+		    case AM_DMX_SRC_DMA7:
+		        source = DMA_7;
+		        input = INPUT_LOCAL;
+		        break;
+		    default:
+		    	break;
+		    }
+		    if (ioctl(fd, DMX_SET_INPUT, input) == -1)
+		    {
+		        AM_DEBUG(1, "dvb_set_demux_source ioctl DMX_SET_INPUT:%d error:%d", input, errno);
+		        r = -1;
+		    }
+		    else
+		    {
+		        AM_DEBUG(1, "dvb_set_demux_source ioctl sucesss src:%d DMX_SET_INPUT:%d dmx_idx:%d", src, input, dev->dev_no);
+		        r = 0;
+		    }
+		    if (ioctl(fd, DMX_SET_HW_SOURCE, source) == -1)
+		    {
+		        AM_DEBUG(1, "dvb_set_demux_source ioctl DMX_SET_HW_SOURCE:%d error:%d", source, errno);
+		        r = -1;
+		    }
+		    else
+		    {
+		        AM_DEBUG(1, "dvb_set_demux_source ioctl sucesss src:%d DMX_SET_HW_SOURCE:%d dmx_idx:%d", src, source, dev->dev_no);
+		        r = 0;
+		    }
+		    close(fd);
+		}
+		else
+		{
+		    AM_DEBUG(1, "dvb_set_demux_source open \"%s\" failed, error:%d", buf, errno);
+		}
+		return AM_SUCCESS;
+	    } else {
 	
-	switch(src)
-	{
-		case AM_DMX_SRC_TS0:
-			cmd = "ts0";
-		break;
-		case AM_DMX_SRC_TS1:
-			cmd = "ts1";
-		break;
-#if defined(CHIP_8226M) || defined(CHIP_8626X)
-		case AM_DMX_SRC_TS2:
-			cmd = "ts2";
-		break;
-#endif
-		case AM_DMX_SRC_TS3:
-			cmd = "ts3";
-		break;
-		case AM_DMX_SRC_HIU:
-			cmd = "hiu";
-		break;
-		case AM_DMX_SRC_HIU1:
-			cmd = "hiu1";
-		break;
-		default:
-			AM_DEBUG(1, "do not support demux source %d", src);
-		return AM_DMX_ERR_NOT_SUPPORTED;
-	}
-	
-	return AM_FileEcho(buf, cmd);
+		switch(src)
+		{
+			case AM_DMX_SRC_TS0:
+				cmd = "ts0";
+			break;
+			case AM_DMX_SRC_TS1:
+				cmd = "ts1";
+			break;
+	#if defined(CHIP_8226M) || defined(CHIP_8626X)
+			case AM_DMX_SRC_TS2:
+				cmd = "ts2";
+			break;
+	#endif
+			case AM_DMX_SRC_TS3:
+				cmd = "ts3";
+			break;
+			case AM_DMX_SRC_HIU:
+				cmd = "hiu";
+			break;
+			case AM_DMX_SRC_HIU1:
+				cmd = "hiu1";
+			break;
+			default:
+				AM_DEBUG(1, "do not support demux source %d", src);
+			return AM_DMX_ERR_NOT_SUPPORTED;
+		}
+		
+		return AM_FileEcho(buf, cmd);
+	    }
 }
 

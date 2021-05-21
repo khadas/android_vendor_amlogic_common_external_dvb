@@ -1,0 +1,8 @@
+subdirs = [
+  "am_adp",
+  "am_mw",
+  "am_ver",
+  "am_sysfs",
+]
+
+

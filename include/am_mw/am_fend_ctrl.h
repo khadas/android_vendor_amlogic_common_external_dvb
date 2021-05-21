@@ -19,7 +19,6 @@
 /*add for config define for linux dvb *.h*/
 #include <am_config.h>
 #include <linux/dvb/frontend.h>
-
 #include <am_types.h>
 #include <am_mem.h>
 #include <am_fend.h>
@@ -88,7 +87,7 @@ typedef struct AM_FENDCTRL_DVBFrontendParametersCable
 typedef struct AM_FENDCTRL_DVBFrontendParametersTerrestrial
 {
 	struct dvb_frontend_parameters para; /**< parameter*/
-	fe_ofdm_mode_t ofdm_mode;
+	int ofdm_mode;
 }AM_FENDCTRL_DVBFrontendParametersTerrestrial_t;
 
 /**\brief ATSC frontend control module parameters*/

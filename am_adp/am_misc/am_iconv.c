@@ -41,8 +41,8 @@ bool actionFlag = false;
 void am_first_action(void)
 {
 	if (!actionFlag) {
-		setenv("ICU_DATA", "/system/usr/icu", 1);
-		u_setDataDirectory("/system/usr/icu");
+		setenv("ICU_DATA", "/vendor/usr/icu", 1);
+		u_setDataDirectory("/vendor/usr/icu");
 		long status = 0;
 		u_init(&status);
 		if (status > 0)
@@ -55,53 +55,6 @@ void am_first_action(void)
 void
 am_ucnv_dlink(void)
 {
-	static void* handle = NULL;
 
-	if(handle == NULL) {
-		handle = dlopen("libicuuc.so", RTLD_LAZY);
-		setenv("ICU_DATA", "/system/usr/icu", 1);
-	}
-	assert(handle);
-
-#define LOAD_UCNV_SYMBOL(name, post)\
-	if(!am_##name##_ptr)\
-		am_##name##_ptr = dlsym(handle, #name post);
-#define LOAD_UCNV_SYMBOLS(post)\
-	LOAD_UCNV_SYMBOL(ucnv_open, post)\
-	LOAD_UCNV_SYMBOL(ucnv_close, post)\
-	LOAD_UCNV_SYMBOL(ucnv_convertEx, post)\
-	LOAD_UCNV_SYMBOL(u_setDataDirectory, post)\
-	LOAD_UCNV_SYMBOL(u_init, post)
-
-#define CHECK_LOAD_SYMBOL(name)\
-	if(!am_##name##_ptr){\
-		AM_DEBUG(1, #name" not found. ucnv init fail.");}
-#define CHECK_LOAD_SYMBOLS()\
-	CHECK_LOAD_SYMBOL(ucnv_open)\
-	CHECK_LOAD_SYMBOL(ucnv_close)\
-	CHECK_LOAD_SYMBOL(ucnv_convertEx)\
-	CHECK_LOAD_SYMBOL(u_setDataDirectory)\
-	CHECK_LOAD_SYMBOL(u_init)
-
-	LOAD_UCNV_SYMBOLS("")
-	LOAD_UCNV_SYMBOLS("_48")
-	LOAD_UCNV_SYMBOLS("_51")
-	LOAD_UCNV_SYMBOLS("_53")
-	LOAD_UCNV_SYMBOLS("_55")
-	LOAD_UCNV_SYMBOLS("_56")
-	LOAD_UCNV_SYMBOLS("_58")
-	LOAD_UCNV_SYMBOLS("_60")
-
-	CHECK_LOAD_SYMBOLS()
-
-	if (am_u_setDataDirectory_ptr)
-		am_u_setDataDirectory_ptr("/system/usr/icu");
-	if (am_u_init_ptr) {
-		long status = 0;
-		am_u_init_ptr(&status);
-		if (status > 0) {
-			AM_DEBUG(1, "icu init fail. [%ld]", status);
-		}
-	}
 }
 

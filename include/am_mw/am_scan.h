@@ -319,7 +319,7 @@ typedef struct AM_SCAN_TS_s
 typedef struct
 {
     void* pData;
-    v4l2_std_id pOutColorSTD;
+    int pOutColorSTD;
     int checkStable;
 } AM_SCAN_ATV_LOCK_PARA_t;
 

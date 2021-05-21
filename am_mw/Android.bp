@@ -1,0 +1,151 @@
+// TODO:
+cc_library_static {
+    vendor: true,
+    //vendor_available: true,
+    name: "libam_mw_static",
+    compile_multilib: "32",
+
+    arch: {
+	arm: {
+	    instruction_set: "arm",
+	},
+	 arm64: {
+	    enabled: false,
+	},
+	x86: {
+	    enabled: false,
+	},
+	x86_64: {
+	    enabled: false,
+	},
+    },
+    srcs: [
+		   "am_db/am_db.c",
+		   "am_epg/am_epg.c",
+		   "am_rec/am_rec.c",
+		   "am_scan/am_scan.c",
+		   "am_sub2/am_sub.c",
+		   "am_sub2/dvb_sub.c",
+		   "am_tt2/am_tt.c",
+		   "am_si/am_si.c",
+		   "am_si/atsc/atsc_rrt.c",
+		   "am_si/atsc/atsc_vct.c",
+		   "am_si/atsc/atsc_mgt.c",
+		   "am_si/atsc/atsc_stt.c",
+		   "am_si/atsc/atsc_eit.c",
+		   "am_si/atsc/atsc_ett.c",
+		   "am_si/atsc/atsc_descriptor.c",
+		   "am_si/atsc/huffman_decode.c",
+		   "am_fend_ctrl/am_sec.c",
+		   "am_fend_ctrl/am_fend_ctrl.c",
+		   "am_caman/am_caman.c",
+		   "am_caman/ca_dummy.c",
+		   "am_cc/am_cc.c",
+		   "am_cc/cc_json.c",
+		   "am_isdb/am_isdb.c",
+		   "am_upd/am_upd.c",
+                   "am_closecaption/am_cc.c",
+                   "am_closecaption/am_cc_decoder.c",
+                   "am_closecaption/am_xds.c",
+                   "am_closecaption/am_cc_slice.c",
+                   "am_closecaption/am_vbi/linux_vbi/linux_vbi.c",
+                   "am_closecaption/am_vbi/am_vbi_api.c",
+                   "am_check_scramb/am_check_scramb.c",
+                   "am_scte27/am_scte27.c",
+    ],
+
+    cflags: [
+        "-DANDROID",
+        "-std=gnu99",
+        "-DLINUX_DVB_FEND",
+        "-DLOG_LEVEL=1",
+        "-DUSE_VENDOR_ICU"
+    ],
+    ldflags: ["-shared"],
+    clang_cflags: ["-Wno-error=tautological-pointer-compare"],
+
+    // TODO: include library
+    include_dirs: [
+        "hardware/amlogic/LibAudio/amadec/include",
+         "hardware/amlogic/media/amcodec/include",
+        "vendor/amlogic/common/external/dvb/include/am_adp",
+         "vendor/amlogic/common/external/dvb/include/am_ver",
+	"vendor/amlogic/common/external/dvb/include/am_adp/libdvbsi",
+        "vendor/amlogic/common/external/dvb/include/am_adp/libdvbsi/descriptors",
+        "vendor/amlogic/common/external/dvb/include/am_adp/libdvbsi/tables",
+        "vendor/amlogic/common/external/dvb/am_mw/am_closecaption/am_vbi/",
+        "vendor/amlogic/common/external/dvb/include/am_mw",
+        "vendor/amlogic/common/external/dvb/android/ndk/include",
+        "vendor/amlogic/common/external/dvb/android/ndk/include/linux",
+        "vendor/amlogic/common/external/dvb/am_adp/am_open_lib/am_ci/",
+	"vendor/amlogic/common/mediahal_sdk/include",
+	"vendor/amlogic/common/prebuilt/icu/include",
+	"vendor/amlogic/common/external/libzvbi_src/src",
+	 "external/sqlite/dist/",
+    ],
+
+    shared_libs: [
+       "libam_adp",
+       //"libsqlite",
+       "libzvbi",
+       "libicuuc_vendor",
+       "libcutils",
+       "liblog",
+       "libdl",
+       "libc",
+    ],
+     static_libs: [
+       //"libicui18n_product",
+       "libsqlite",
+    ],
+}
+
+cc_library_shared {
+    name: "libam_mw",
+    vendor: true,
+    compile_multilib: "32",
+
+    arch: {
+        arm: {
+            instruction_set: "arm",
+        },
+        arm64: {
+            enabled: false,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+
+    shared_libs: [
+       "libam_adp",
+       "libzvbi",
+       "libicuuc_vendor",
+       "libcutils",
+       "liblog",
+       "libdl",
+       "libc",
+    ],
+    cflags: [
+        "-DANDROID",
+        "-std=gnu99",
+        "-DLINUX_DVB_FEND",
+        "-DLOG_LEVEL=1",
+        "-DUSE_VENDOR_ICU"
+    ],
+    ldflags: ["-shared"],
+
+    whole_static_libs: [
+       "libam_mw_static",
+    ],
+
+    static_libs: [
+       //"libicui18n_product",
+       "libsqlite",
+    ],
+
+}
+

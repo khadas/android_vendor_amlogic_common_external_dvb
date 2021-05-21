@@ -26,12 +26,18 @@
 #define __DVB_CORE__       (1)
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include <linux/dvb/frontend.h>
-
 typedef struct atv_status_s atv_status_t;
 typedef struct tuner_param_s tuner_param_t;
 //typedef enum fe_ofdm_mode fe_ofdm_mode_t;
-
-#define fe_ofdm_mode_t enum fe_ofdm_mode
+//#define fe_ofdm_mode_t enum fe_ofdm_mode
+#ifdef __cplusplus
+}
+#endif
+//#define fe_ofdm_mode_t enum fe_ofdm_mode
 #endif
 

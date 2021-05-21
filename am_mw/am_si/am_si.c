@@ -2087,7 +2087,7 @@ AM_ErrorCode_t AM_SI_ExtractAVFromES(dvbpsi_pmt_es_t *es, int *vid, int *vfmt, A
 		if (strncasecmp(buf, "v1", 2) == 0)
 			ac4_enable = AM_FALSE;
 	}
-	AM_DEBUG(1, "set ac4_enable = %d\n", ac4_enable);
+	//AM_DEBUG(1, "set ac4_enable = %d\n", ac4_enable);
 
 	if (afmt_tmp == -1 && ac4_enable) {
 		AM_SI_LIST_BEGIN(es->p_first_descriptor, descr)

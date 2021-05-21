@@ -17,6 +17,7 @@
 #define _AM_ICONV_H
 
 #include "am_types.h"
+#include <am_debug.h>
 
 #ifdef __cplusplus
 extern "C"
