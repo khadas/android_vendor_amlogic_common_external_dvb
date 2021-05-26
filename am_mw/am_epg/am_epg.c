@@ -80,8 +80,9 @@
 //#define PARALLEL_PSIP_EIT_CNT 4
 /*并行接收ATSC ETT的个数*/
 //#define PARALLEL_PSIP_ETT_CNT 4
-#define PARALLEL_PSIP_ETT_CNT_PROP "tv.parallel.psip.ett.cnt"
-#define PARALLEL_PSIP_EIT_CNT_PROP "tv.parallel.psip.eit.cnt"
+
+#define PARALLEL_PSIP_ETT_CNT_PROP "persist.vendor.tv.parallel.psip.ett.cnt"
+#define PARALLEL_PSIP_EIT_CNT_PROP "persist.vendor.tv.parallel.psip.eit.cnt"
 
  /*位操作*/
 #define BIT_MASK(b) (1 << ((b) % 8))

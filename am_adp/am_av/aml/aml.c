@@ -895,7 +895,7 @@ static int _get_prop_int3(char *prop, int *val1, int *val2, int *val3, int def1,
 	return 0;
 }
 
-#define DVB_LOGLEVEL_PROP "tv.dvb.loglevel"
+#define DVB_LOGLEVEL_PROP "persist.vendor.tv.dvb.loglevel"
 
 static int _get_asso_enable() {
 #ifdef ANDROID
