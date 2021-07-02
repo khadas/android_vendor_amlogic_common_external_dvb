@@ -56,7 +56,7 @@
 
 /*超时ms定义*/
 #define PAT_TIMEOUT 3000
-#define PMT_TIMEOUT 3000
+#define PMT_TIMEOUT 6000
 #define SDT_TIMEOUT 6000
 #define NIT_TIMEOUT 15000
 #define CAT_TIMEOUT 3000
