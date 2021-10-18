@@ -71,10 +71,10 @@ static AM_FEND_Device_t fend_devices[FEND_DEV_COUNT] =
 		.dev_no = 0,
 		.drv = &linux_dvb_fend_drv,
 	},
-#if  FEND_DEV_COUNT > 1
+#if FEND_DEV_COUNT > 1
 	[1] = {
 		.dev_no = 1,
-		.drv = &linux_v4l2_fend_drv,
+		.drv = &linux_dvb_fend_drv,
 	},
 #endif
 #endif
