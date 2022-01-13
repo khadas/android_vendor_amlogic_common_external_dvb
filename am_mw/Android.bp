@@ -3,14 +3,14 @@ cc_library_static {
     vendor: true,
     //vendor_available: true,
     name: "libam_mw_static",
-    compile_multilib: "32",
+    compile_multilib: "both",
 
     arch: {
 	arm: {
 	    instruction_set: "arm",
 	},
 	 arm64: {
-	    enabled: false,
+	    enabled: true,
 	},
 	x86: {
 	    enabled: false,
@@ -59,7 +59,7 @@ cc_library_static {
         "-std=gnu99",
         "-DLINUX_DVB_FEND",
         "-DLOG_LEVEL=1",
-        "-DUSE_VENDOR_ICU"
+       // "-DUSE_VENDOR_ICU"
     ],
     ldflags: ["-shared"],
     clang_cflags: ["-Wno-error=tautological-pointer-compare"],
@@ -88,7 +88,7 @@ cc_library_static {
        "libam_adp",
        //"libsqlite",
        "libzvbi",
-       "libicuuc_vendor",
+       //"libicuuc_vendor",
        "libcutils",
        "liblog",
        "libdl",
@@ -103,14 +103,14 @@ cc_library_static {
 cc_library_shared {
     name: "libam_mw",
     vendor: true,
-    compile_multilib: "32",
+    compile_multilib: "both",
 
     arch: {
         arm: {
             instruction_set: "arm",
         },
         arm64: {
-            enabled: false,
+            enabled: true,
         },
         x86: {
             enabled: false,
@@ -123,7 +123,7 @@ cc_library_shared {
     shared_libs: [
        "libam_adp",
        "libzvbi",
-       "libicuuc_vendor",
+      // "libicuuc_vendor",
        "libcutils",
        "liblog",
        "libdl",
@@ -134,7 +134,7 @@ cc_library_shared {
         "-std=gnu99",
         "-DLINUX_DVB_FEND",
         "-DLOG_LEVEL=1",
-        "-DUSE_VENDOR_ICU"
+     //   "-DUSE_VENDOR_ICU"
     ],
     ldflags: ["-shared"],
 

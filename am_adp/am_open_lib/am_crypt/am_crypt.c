@@ -1,5 +1,6 @@
 #include <string.h>
 #include "des.h"
+#include <stdlib.h>
 
 static void av_des_crypt_ts_packet(AVDES* d, uint8_t* dst, const uint8_t *src, int decrypt)
 {

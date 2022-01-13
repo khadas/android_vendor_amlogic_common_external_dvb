@@ -3,9 +3,9 @@ cc_library_static {
     vendor: true,
     //vendor_available: true,
     name: "libam_ver_static",
-    compile_multilib: "32",
+    compile_multilib: "both",
     srcs: [
-	   "am_ver.c",
+        "am_ver.c",
     ],
 
     cflags: [
@@ -17,9 +17,10 @@ cc_library_static {
         arm: {
             instruction_set: "arm",
         },
-        /*arm64: {
-            enabled: false,
+        arm64: {
+            enabled: true,
         },
+        /*
         x86: {
             enabled: false,
         },
@@ -51,13 +52,13 @@ cc_library_static {
 cc_library_shared {
     name: "libam_ver",
     vendor: true,
-    compile_multilib: "32",
+    compile_multilib: "both",
     arch: {
         arm: {
             instruction_set: "arm",
         },
         arm64: {
-            enabled: false,
+            enabled: true,
         },
         x86: {
             enabled: false,

@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <math.h>
 #include <signal.h>
+#include <strings.h>
 
 #define USERDATA_POLL_TIMEOUT 100
 #define MAX_CC_NUM			64
